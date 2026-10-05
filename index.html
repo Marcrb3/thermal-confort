@@ -108,6 +108,9 @@
         import { fromUrl } from
             "https://cdn.jsdelivr.net/npm/geotiff/+esm";
 
+        import proj4 from
+            "https://cdn.jsdelivr.net/npm/proj4@2.19.10/+esm";
+
 
         const status = document.getElementById("status");
 
@@ -165,12 +168,10 @@
             status.textContent = "Obrint COG...";
 
             const tiff = await fromUrl(COG_URL);
-
             const image = await tiff.getImage();
 
             const width = image.getWidth();
             const height = image.getHeight();
-
             const bbox = image.getBoundingBox();
 
             console.log("COG:", {
@@ -182,16 +183,8 @@
             });
 
 
-            status.textContent =
-                `Raster: ${width} × ${height}`;
-
-
             // ----------------------------------------------------------
-            // LLEGIR PIXELS
-            // ----------------------------------------------------------
-
-            // ----------------------------------------------------------
-            // LLEGIR NOMÉS UNA FINESTRA
+            // LLEGIR UNA FINESTRA
             // ----------------------------------------------------------
 
             const windowSize = 512;
@@ -206,53 +199,205 @@
                 interleave: true
             });
 
-            console.log("Raster llegit:", raster.length);
-            console.log("Primer valor:", raster[0]);
+            const rasterWidth = Math.min(windowSize, width);
+            const rasterHeight = Math.min(windowSize, height);
 
 
             // ----------------------------------------------------------
-            // ESTADÍSTIQUES DE LA FINESTRA
+            // ESCALA UTCI → COLOR
             // ----------------------------------------------------------
 
-            let min = Infinity;
-            let max = -Infinity;
-            let valid = 0;
+            function utciColor(value) {
+
+                if (!Number.isFinite(value)) {
+                    return [0, 0, 0, 0];
+                }
+
+                // Simplificació provisional:
+                // -40 °C → blau
+                // +40 °C → vermell
+
+                const t = Math.max(
+                    0,
+                    Math.min(1, (value + 40) / 80)
+                );
+
+                let r;
+                let g;
+                let b;
+
+                if (t < 0.25) {
+
+                    const p = t / 0.25;
+
+                    r = 49 + (69 - 49) * p;
+                    g = 54 + (117 - 54) * p;
+                    b = 149 + (180 - 149) * p;
+
+                } else if (t < 0.5) {
+
+                    const p = (t - 0.25) / 0.25;
+
+                    r = 69 + (255 - 69) * p;
+                    g = 117 + (255 - 117) * p;
+                    b = 180 + (191 - 180) * p;
+
+                } else if (t < 0.75) {
+
+                    const p = (t - 0.5) / 0.25;
+
+                    r = 255 + (244 - 255) * p;
+                    g = 255 + (109 - 255) * p;
+                    b = 191 + (67 - 191) * p;
+
+                } else {
+
+                    const p = (t - 0.75) / 0.25;
+
+                    r = 244 + (165 - 244) * p;
+                    g = 109 + (0 - 109) * p;
+                    b = 67 + (38 - 67) * p;
+                }
+
+                return [
+                    Math.round(r),
+                    Math.round(g),
+                    Math.round(b),
+                    220
+                ];
+            }
+
+
+            // ----------------------------------------------------------
+            // CREAR IMATGE RGBA
+            // ----------------------------------------------------------
+
+            const pixels = new Uint8ClampedArray(
+                rasterWidth * rasterHeight * 4
+            );
 
             for (let i = 0; i < raster.length; i++) {
 
                 const value = raster[i];
 
-                if (Number.isFinite(value)) {
+                const [r, g, b, a] = utciColor(value);
 
-                    valid++;
+                const offset = i * 4;
 
-                    if (value < min) min = value;
-                    if (value > max) max = value;
-                }
+                pixels[offset] = r;
+                pixels[offset + 1] = g;
+                pixels[offset + 2] = b;
+                pixels[offset + 3] = a;
             }
 
-            console.log({
-                min,
-                max,
-                valid,
-                total: raster.length
+
+            // ----------------------------------------------------------
+            // CANVAS
+            // ----------------------------------------------------------
+
+            const canvas = document.createElement("canvas");
+
+            canvas.width = rasterWidth;
+            canvas.height = rasterHeight;
+
+            const context = canvas.getContext("2d");
+
+            const imageData = new ImageData(
+                pixels,
+                rasterWidth,
+                rasterHeight
+            );
+
+            context.putImageData(imageData, 0, 0);
+
+
+            const imageUrl = canvas.toDataURL("image/png");
+
+
+            // ----------------------------------------------------------
+            // COORDENADES
+            // ----------------------------------------------------------
+
+            const resolution = image.getResolution();
+
+            const pixelWidth = resolution[0];
+            const pixelHeight = Math.abs(resolution[1]);
+
+            const minX = bbox[0];
+            const maxY = bbox[3];
+
+            const windowMaxX =
+                minX + rasterWidth * pixelWidth;
+
+            const windowMinY =
+                maxY - rasterHeight * pixelHeight;
+
+            const topLeft = proj4(
+                "EPSG:25831",
+                "EPSG:4326",
+                [minX, maxY]
+            );
+
+            const bottomRight = proj4(
+                "EPSG:25831",
+                "EPSG:4326",
+                [maxX, minY]
+            );
+
+            console.log("Top-left:", topLeft);
+            console.log("Bottom-right:", bottomRight);
+
+
+            // ----------------------------------------------------------
+            // MAPLIBRE IMAGE SOURCE
+            // ----------------------------------------------------------
+
+            map.addSource("utci", {
+                type: "image",
+
+                url: imageUrl,
+
+                coordinates: [
+                    topLeft,
+                    [bottomRight[0], topLeft[1]],
+                    bottomRight,
+                    [topLeft[0], bottomRight[1]]
+                ]
             });
 
+
+            map.addLayer({
+                id: "utci",
+                type: "raster",
+
+                source: "utci",
+
+                paint: {
+                    "raster-opacity": 0.75,
+                    "raster-fade-duration": 0
+                }
+            });
+
+
+            // ----------------------------------------------------------
+            // ZOOM AL RASTER
+            // ----------------------------------------------------------
+
+            map.fitBounds(
+                [
+                    [topLeft[0], bottomRight[1]],
+                    [bottomRight[0], topLeft[1]]
+                ],
+                {
+                    padding: 40,
+                    duration: 0
+                }
+            );
+
+
             status.textContent =
-                `Finestra 512 × 512 · UTCI: ` +
-                `${min.toFixed(1)} → ${max.toFixed(1)} °C`;
-
-            console.log("Lectura parcial correcta.");
-
-
-            // ----------------------------------------------------------
-            // DE MOMENT NOMÉS FEM LA LECTURA
-            // ----------------------------------------------------------
-
-            console.log("Bounding box:", bbox);
-            console.log("Raster carregat correctament.");
+                `UTCI carregat · finestra ${rasterWidth} × ${rasterHeight}`;
         }
-
 
         map.on("load", () => {
 
