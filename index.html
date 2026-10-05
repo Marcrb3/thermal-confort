@@ -22,17 +22,27 @@
             height: 100%;
         }
 
+        /* =========================================================
+           PANEL
+           ========================================================= */
+
         #panel {
             position: absolute;
             top: 12px;
             left: 12px;
             z-index: 10;
+
             width: 330px;
             max-width: calc(100vw - 40px);
+
             background: white;
+
             padding: 14px 16px;
+
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+
+            box-shadow:
+                0 2px 10px rgb(0 0 0 / 25%);
         }
 
         #panel strong {
@@ -48,26 +58,33 @@
         .control label {
             display: block;
             margin-bottom: 5px;
+
             font-size: 12px;
             font-weight: 600;
         }
 
-        select,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+
+            padding: 7px;
+
+            border: 1px solid #ccc;
+            border-radius: 5px;
+
+            background: white;
+        }
+
         input[type="range"] {
             width: 100%;
             box-sizing: border-box;
         }
 
-        select {
-            padding: 7px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background: white;
-        }
-
         #timeLabel {
             margin-top: 5px;
+
             text-align: center;
+
             font-size: 13px;
             font-weight: 600;
         }
@@ -80,10 +97,14 @@
 
         button {
             flex: 1;
+
             padding: 7px 8px;
+
             border: 1px solid #bbb;
             border-radius: 5px;
+
             background: #f7f7f7;
+
             cursor: pointer;
         }
 
@@ -93,21 +114,36 @@
 
         #status {
             margin-top: 10px;
+
             font-size: 12px;
             color: #555;
+
             line-height: 1.4;
         }
 
+
+        /* =========================================================
+           LLEGENDA
+           ========================================================= */
+
         #legend {
             position: absolute;
+
             bottom: 24px;
             right: 12px;
+
             z-index: 10;
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+
             width: 250px;
+
+            background: white;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            box-shadow:
+                0 2px 10px rgb(0 0 0 / 25%);
         }
 
         #legendTitle {
@@ -117,9 +153,12 @@
 
         #gradient {
             height: 16px;
+
             margin: 8px 0 4px;
 
-            background: linear-gradient(to right,
+            background:
+                linear-gradient(to right,
+
                     #313695,
                     #4575b4,
                     #74add1,
@@ -134,6 +173,7 @@
         .legend-labels {
             display: flex;
             justify-content: space-between;
+
             font-size: 11px;
         }
 
@@ -144,17 +184,23 @@
         .stress-item {
             display: flex;
             align-items: center;
+
             gap: 7px;
+
             margin: 4px 0;
+
             font-size: 11px;
         }
 
         .stress-color {
             width: 18px;
             height: 13px;
+
             flex: 0 0 18px;
+
             border-radius: 2px;
         }
+
 
         @media (max-width: 600px) {
 
@@ -165,22 +211,28 @@
             #legend {
                 width: 210px;
             }
+
         }
     </style>
+
 </head>
+
 
 <body>
 
     <div id="map"></div>
 
 
-    <!-- ============================================================
-         PANEL DE CONTROL
-         ============================================================ -->
+    <!-- =========================================================
+         PANEL
+         ========================================================= -->
 
     <div id="panel">
 
-        <strong>Thermal Confort</strong>
+        <strong>
+            Thermal Confort
+        </strong>
+
 
         <div class="control">
 
@@ -224,9 +276,11 @@
                 ◀
             </button>
 
+
             <button id="playButton" type="button">
                 ▶ Play
             </button>
+
 
             <button id="nextButton" type="button">
                 ▶
@@ -242,9 +296,9 @@
     </div>
 
 
-    <!-- ============================================================
+    <!-- =========================================================
          LLEGENDA
-         ============================================================ -->
+         ========================================================= -->
 
     <div id="legend">
 
@@ -337,11 +391,11 @@
     </div>
 
 
-    <script type="module">
+    <!-- =========================================================
+         JAVASCRIPT
+         ========================================================= -->
 
-        // ============================================================
-        // IMPORTS
-        // ============================================================
+    <script type="module">
 
         import maplibregl from
             "https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/+esm";
@@ -353,9 +407,9 @@
             "https://cdn.jsdelivr.net/npm/proj4@2.19.10/+esm";
 
 
-        // ============================================================
+        // =========================================================
         // EPSG:25831
-        // ============================================================
+        // =========================================================
 
         proj4.defs(
             "EPSG:25831",
@@ -363,9 +417,9 @@
         );
 
 
-        // ============================================================
-        // ELEMENTS HTML
-        // ============================================================
+        // =========================================================
+        // ELEMENTS
+        // =========================================================
 
         const status =
             document.getElementById("status");
@@ -398,9 +452,9 @@
             document.getElementById("stressLegend");
 
 
-        // ============================================================
-        // FITXERS COG
-        // ============================================================
+        // =========================================================
+        // FITXERS
+        // =========================================================
 
         const forecastFiles = [
 
@@ -440,46 +494,56 @@
         ];
 
 
-        // ============================================================
+        // =========================================================
         // ESTAT
-        // ============================================================
+        // =========================================================
 
         let currentIndex = 0;
 
         let currentMode = "utci";
 
-        let isPlaying = false;
-
-        let playTimer = null;
-
-        let renderToken = 0;
-
-        /*
-         * Guardem només el raster actual.
-         *
-         * Un raster de 2690 × 2620 float32 ocupa aproximadament
-         * 28 MB en memòria. Guardar els 30 faria pujar molt
-         * l'ús de RAM.
-         */
-
         let currentRaster = null;
 
         let currentRasterFilename = null;
 
-        let rasterWidth = null;
+        let rasterWidth = 0;
 
-        let rasterHeight = null;
+        let rasterHeight = 0;
 
         let rasterCoordinates = null;
 
         let rasterBounds = null;
 
-        let rasterCanvas = null;
+        let animationTimer = null;
+
+        let playing = false;
+
+        let requestId = 0;
 
 
-        // ============================================================
+        // =========================================================
+        // CANVAS PERSISTENT
+        // =========================================================
+
+        /*
+         * Aquest és EL canvas que utilitzarà MapLibre.
+         *
+         * No en crearem un de nou per cada TIF.
+         */
+
+        const canvas =
+            document.createElement("canvas");
+
+        canvas.width = 2690;
+        canvas.height = 2620;
+
+        const context =
+            canvas.getContext("2d");
+
+
+        // =========================================================
         // MAPA
-        // ============================================================
+        // =========================================================
 
         const map = new maplibregl.Map({
 
@@ -537,9 +601,9 @@
         );
 
 
-        // ============================================================
-        // COLOR UTCI CONTINU
-        // ============================================================
+        // =========================================================
+        // PALETA UTCI CONTÍNUA
+        // =========================================================
 
         function utciColor(value) {
 
@@ -550,10 +614,14 @@
             }
 
 
-            const t = Math.max(
-                0,
-                Math.min(1, (value + 40) / 80)
-            );
+            const t =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        (value + 40) / 80
+                    )
+                );
 
 
             let r;
@@ -573,7 +641,8 @@
 
             else if (t < 0.5) {
 
-                const p = (t - 0.25) / 0.25;
+                const p =
+                    (t - 0.25) / 0.25;
 
                 r = 69 + (255 - 69) * p;
                 g = 117 + (255 - 117) * p;
@@ -583,7 +652,8 @@
 
             else if (t < 0.75) {
 
-                const p = (t - 0.5) / 0.25;
+                const p =
+                    (t - 0.5) / 0.25;
 
                 r = 255 + (244 - 255) * p;
                 g = 255 + (109 - 255) * p;
@@ -593,7 +663,8 @@
 
             else {
 
-                const p = (t - 0.75) / 0.25;
+                const p =
+                    (t - 0.75) / 0.25;
 
                 r = 244 + (165 - 244) * p;
                 g = 109 + (0 - 109) * p;
@@ -614,9 +685,9 @@
         }
 
 
-        // ============================================================
-        // COLOR ESTRÈS TÈRMIC
-        // ============================================================
+        // =========================================================
+        // PALETA ESTRÈS
+        // =========================================================
 
         function stressColor(value) {
 
@@ -627,68 +698,41 @@
             }
 
 
-            if (value < -40) {
-
+            if (value < -40)
                 return [49, 54, 149, 220];
 
-            }
-
-            if (value < -27) {
-
+            if (value < -27)
                 return [69, 117, 180, 220];
 
-            }
-
-            if (value < -13) {
-
+            if (value < -13)
                 return [116, 173, 209, 220];
 
-            }
-
-            if (value < 0) {
-
+            if (value < 0)
                 return [171, 217, 233, 220];
 
-            }
-
-            if (value < 9) {
-
+            if (value < 9)
                 return [217, 240, 243, 220];
 
-            }
-
-            if (value < 26) {
-
+            if (value < 26)
                 return [255, 255, 191, 220];
 
-            }
-
-            if (value < 32) {
-
+            if (value < 32)
                 return [254, 224, 139, 220];
 
-            }
-
-            if (value < 38) {
-
+            if (value < 38)
                 return [253, 174, 97, 220];
 
-            }
-
-            if (value < 46) {
-
+            if (value < 46)
                 return [244, 109, 67, 220];
-
-            }
 
             return [165, 0, 38, 220];
 
         }
 
 
-        // ============================================================
-        // COLOR SEGONS MODE
-        // ============================================================
+        // =========================================================
+        // COLOR ACTUAL
+        // =========================================================
 
         function getColor(value) {
 
@@ -703,14 +747,15 @@
         }
 
 
-        // ============================================================
-        // LLEGIR COG
-        // ============================================================
+        // =========================================================
+        // CARREGAR COG
+        // =========================================================
 
         async function loadRaster(filename) {
 
             const url =
                 `./data/${filename}`;
+
 
             status.textContent =
                 `Carregant ${formatFilename(filename)}...`;
@@ -722,13 +767,9 @@
             );
 
 
-            /*
-             * fromUrl() permet que geotiff.js treballi amb el COG
-             * remot.
-             */
-
             const tiff =
                 await fromUrl(url);
+
 
             const image =
                 await tiff.getImage();
@@ -751,37 +792,33 @@
                     width,
                     height,
                     bbox,
-                    resolution: image.getResolution(),
-                    samples: image.getSamplesPerPixel()
+                    resolution:
+                        image.getResolution(),
+                    samples:
+                        image.getSamplesPerPixel()
                 }
             );
 
 
-            /*
-             * Llegim tot el raster.
-             *
-             * Això és acceptable per al MVP actual, però més endavant
-             * podrem fer una lectura COG per finestres / tiles.
-             */
-
             const raster =
                 await image.readRasters({
+
                     interleave: true
+
                 });
 
 
-            /*
-             * bbox:
-             *
-             * [minX, minY, maxX, maxY]
-             *
-             * EPSG:25831
-             */
+            const minX =
+                bbox[0];
 
-            const minX = bbox[0];
-            const minY = bbox[1];
-            const maxX = bbox[2];
-            const maxY = bbox[3];
+            const minY =
+                bbox[1];
+
+            const maxX =
+                bbox[2];
+
+            const maxY =
+                bbox[3];
 
 
             const topLeft =
@@ -846,42 +883,58 @@
         }
 
 
-        // ============================================================
-        // CREAR CANVAS COLORITZAT
-        // ============================================================
+        // =========================================================
+        // PINTAR RASTER AL CANVAS
+        // =========================================================
 
-        function rasterToCanvas(raster, width, height) {
+        function paintRaster() {
 
-            const canvas =
-                document.createElement("canvas");
+            if (!currentRaster) {
 
-            canvas.width = width;
-            canvas.height = height;
+                return;
+
+            }
 
 
-            const context =
-                canvas.getContext("2d", {
-                    willReadFrequently: false
-                });
+            /*
+             * El canvas manté exactament la mida del raster.
+             */
+
+            if (
+                canvas.width !== rasterWidth ||
+                canvas.height !== rasterHeight
+            ) {
+
+                canvas.width =
+                    rasterWidth;
+
+                canvas.height =
+                    rasterHeight;
+
+            }
 
 
             const pixels =
                 new Uint8ClampedArray(
-                    width * height * 4
+                    rasterWidth *
+                    rasterHeight *
+                    4
                 );
 
 
             for (
                 let i = 0;
-                i < raster.length;
+                i < currentRaster.length;
                 i++
             ) {
 
                 const value =
-                    raster[i];
+                    currentRaster[i];
+
 
                 const color =
                     getColor(value);
+
 
                 const offset =
                     i * 4;
@@ -905,8 +958,8 @@
             const imageData =
                 new ImageData(
                     pixels,
-                    width,
-                    height
+                    rasterWidth,
+                    rasterHeight
                 );
 
 
@@ -917,19 +970,24 @@
             );
 
 
-            return canvas;
+            /*
+             * CanvasSource amb animate=true detectarà
+             * el nou contingut del canvas.
+             */
+
+            map.triggerRepaint();
 
         }
 
 
-        // ============================================================
+        // =========================================================
         // SHOW RASTER
-        // ============================================================
+        // =========================================================
 
         async function showRaster(index) {
 
-            const token =
-                ++renderToken;
+            const thisRequest =
+                ++requestId;
 
 
             if (
@@ -945,8 +1003,9 @@
             currentIndex =
                 index;
 
+
             timeSlider.value =
-                index;
+                String(index);
 
 
             updateTimeLabel();
@@ -959,7 +1018,7 @@
             try {
 
                 /*
-                 * Si no tenim aquest TIF carregat, el descarreguem.
+                 * Si és un TIF diferent, el carreguem.
                  */
 
                 if (
@@ -971,12 +1030,12 @@
 
 
                     /*
-                     * Si l'usuari ha mogut el slider mentre
-                     * descarregàvem, descartem aquest resultat.
+                     * Si mentrestant l'usuari ha mogut
+                     * el slider, ignorem aquest resultat.
                      */
 
                     if (
-                        token !== renderToken
+                        thisRequest !== requestId
                     ) {
 
                         return;
@@ -1010,59 +1069,30 @@
 
 
                 /*
-                 * Generem el canvas segons el mode actual.
+                 * Pintem el Float32Array al canvas.
                  */
 
-                const canvas =
-                    rasterToCanvas(
-                        currentRaster,
-                        rasterWidth,
-                        rasterHeight
-                    );
-
-
-                if (
-                    token !== renderToken
-                ) {
-
-                    return;
-
-                }
-
-
-                rasterCanvas =
-                    canvas;
+                paintRaster();
 
 
                 /*
-                 * Si la source encara no existeix, la creem.
-                 *
-                 * IMPORTANT:
-                 * posem una URL inicial vàlida. Després les
-                 * actualitzacions es fan amb updateImage().
+                 * Si és la primera vegada, creem
+                 * la CanvasSource.
                  */
 
                 if (
                     !map.getSource("utci")
                 ) {
 
-                    /*
-                     * Pixel PNG transparent 1×1.
-                     */
-
-                    const transparentPixel =
-                        "data:image/png;base64," +
-                        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ" +
-                        "AAAADUlEQVQIHWP4z8DwHwAFgAI/Sc8xGQAAAABJRU5ErkJggg==";
-
-
                     map.addSource(
                         "utci",
                         {
 
-                            type: "image",
+                            type: "canvas",
 
-                            url: transparentPixel,
+                            canvas: canvas,
+
+                            animate: true,
 
                             coordinates:
                                 rasterCoordinates
@@ -1091,47 +1121,41 @@
 
 
                     /*
-                     * Fem zoom només la primera vegada.
+                     * Zoom inicial a Catalunya.
                      */
 
                     map.fitBounds(
                         rasterBounds,
                         {
+
                             padding: 40,
+
                             duration: 0
+
                         }
                     );
 
                 }
 
+                else {
 
-                /*
-                 * Actualitzem la imatge existent.
-                 *
-                 * MapLibre accepta HTMLCanvasElement aquí.
-                 */
+                    /*
+                     * El canvas és el mateix.
+                     * Només actualitzem les coordenades.
+                     */
 
-                const source =
-                    map.getSource("utci");
+                    const source =
+                        map.getSource("utci");
 
 
-                if (!source) {
-
-                    throw new Error(
-                        "No s'ha pogut obtenir la source 'utci'."
+                    source.setCoordinates(
+                        rasterCoordinates
                     );
 
+
+                    map.triggerRepaint();
+
                 }
-
-
-                source.updateImage({
-
-                    image: canvas,
-
-                    coordinates:
-                        rasterCoordinates
-
-                });
 
 
                 status.textContent =
@@ -1157,9 +1181,9 @@
         }
 
 
-        // ============================================================
-        // FORMAT DE DATA
-        // ============================================================
+        // =========================================================
+        // FORMAT FITXER
+        // =========================================================
 
         function formatFilename(filename) {
 
@@ -1176,44 +1200,39 @@
             }
 
 
-            const date =
-                match[1];
+            return (
 
-            const hour =
-                match[2];
+                `${match[1]} · ` +
+                `${match[2]}:${match[3]} UTC`
 
-            const minute =
-                match[3];
-
-
-            return `${date} · ${hour}:${minute} UTC`;
+            );
 
         }
 
 
-        // ============================================================
-        // ACTUALITZAR ETIQUETA TEMPORAL
-        // ============================================================
+        // =========================================================
+        // ACTUALITZAR DATA
+        // =========================================================
 
         function updateTimeLabel() {
 
-            const filename =
-                forecastFiles[currentIndex];
-
-
             timeLabel.textContent =
-                formatFilename(filename);
+                formatFilename(
+                    forecastFiles[currentIndex]
+                );
 
         }
 
 
-        // ============================================================
-        // CANVI DE LLEGENDA
-        // ============================================================
+        // =========================================================
+        // LLEGENDA
+        // =========================================================
 
         function updateLegend() {
 
-            if (currentMode === "stress") {
+            if (
+                currentMode === "stress"
+            ) {
 
                 legendTitle.textContent =
                     "Estrès tèrmic";
@@ -1242,9 +1261,9 @@
         }
 
 
-        // ============================================================
+        // =========================================================
         // CANVI DE MODE
-        // ============================================================
+        // =========================================================
 
         modeSelect.addEventListener(
             "change",
@@ -1253,92 +1272,104 @@
                 currentMode =
                     modeSelect.value;
 
+
                 updateLegend();
 
+
                 /*
-                 * El raster ja està en memòria.
-                 * Només cal tornar-lo a coloritzar.
+                 * No descarreguem el TIF.
+                 *
+                 * Simplement el tornem a pintar.
                  */
 
-                await showRaster(
-                    currentIndex
-                );
+                paintRaster();
+
+                map.triggerRepaint();
 
             }
         );
 
 
-        // ============================================================
+        // =========================================================
         // SLIDER
-        // ============================================================
+        // =========================================================
 
         timeSlider.addEventListener(
             "input",
-            async () => {
+            () => {
 
                 const index =
                     Number(timeSlider.value);
 
-                await showRaster(index);
+
+                showRaster(index);
 
             }
         );
 
 
-        // ============================================================
+        // =========================================================
         // ANTERIOR
-        // ============================================================
+        // =========================================================
 
         previousButton.addEventListener(
             "click",
-            async () => {
+            () => {
 
-                const nextIndex =
+                const index =
                     currentIndex > 0
                         ? currentIndex - 1
                         : forecastFiles.length - 1;
 
-                await showRaster(nextIndex);
+
+                showRaster(index);
 
             }
         );
 
 
-        // ============================================================
+        // =========================================================
         // SEGÜENT
-        // ============================================================
+        // =========================================================
 
         nextButton.addEventListener(
             "click",
-            async () => {
+            () => {
 
-                const nextIndex =
+                const index =
                     currentIndex <
                         forecastFiles.length - 1
                         ? currentIndex + 1
                         : 0;
 
-                await showRaster(nextIndex);
+
+                showRaster(index);
 
             }
         );
 
 
-        // ============================================================
-        // PLAY / PAUSA
-        // ============================================================
+        // =========================================================
+        // PLAY
+        // =========================================================
 
         function stopAnimation() {
 
-            isPlaying = false;
+            playing = false;
 
-            if (playTimer !== null) {
 
-                clearTimeout(playTimer);
+            if (
+                animationTimer !== null
+            ) {
 
-                playTimer = null;
+                clearTimeout(
+                    animationTimer
+                );
+
+                animationTimer = null;
 
             }
+
 
             playButton.textContent =
                 "▶ Play";
@@ -1348,38 +1379,31 @@
 
         async function animationStep() {
 
-            if (!isPlaying) {
+            if (!playing) {
 
                 return;
 
             }
 
 
-            const nextIndex =
+            const index =
                 currentIndex <
                     forecastFiles.length - 1
                     ? currentIndex + 1
                     : 0;
 
 
-            await showRaster(nextIndex);
+            await showRaster(index);
 
 
-            if (!isPlaying) {
+            if (!playing) {
 
                 return;
 
             }
 
 
-            /*
-             * Esperem una mica abans del següent pas.
-             *
-             * Fem setTimeout després d'acabar el render perquè
-             * no s'acumulin renderitzacions simultànies.
-             */
-
-            playTimer =
+            animationTimer =
                 setTimeout(
                     animationStep,
                     1200
@@ -1392,69 +1416,55 @@
             "click",
             () => {
 
-                if (isPlaying) {
+                if (playing) {
 
                     stopAnimation();
 
-                }
-
-                else {
-
-                    isPlaying = true;
-
-                    playButton.textContent =
-                        "⏸ Pausa";
-
-                    animationStep();
+                    return;
 
                 }
+
+
+                playing = true;
+
+
+                playButton.textContent =
+                    "⏸ Pausa";
+
+
+                animationStep();
 
             }
         );
 
 
-        // ============================================================
+        // =========================================================
         // MAP LOAD
-        // ============================================================
+        // =========================================================
 
         map.on(
             "load",
-            async () => {
+            () => {
 
                 updateLegend();
 
                 updateTimeLabel();
 
                 timeSlider.max =
-                    forecastFiles.length - 1;
-
-
-                try {
-
-                    await showRaster(0);
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "Error inicial:",
-                        error
+                    String(
+                        forecastFiles.length - 1
                     );
 
-                    status.textContent =
-                        "Error carregant el primer COG: " +
-                        error.message;
 
-                }
+                showRaster(0);
 
             }
         );
 
 
-        // ============================================================
+        // =========================================================
         // ERRORS MAPLIBRE
-        // ============================================================
+        // =========================================================
 
         map.on(
             "error",
