@@ -5,48 +5,166 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Thermal Confort — COG test</title>
+    <title>Thermal Confort — UTCI</title>
+
+    <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
 
     <style>
+        html,
         body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             font-family: system-ui, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
         }
 
-        pre {
-            background: #f5f5f5;
-            padding: 16px;
-            overflow: auto;
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #info {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+            max-width: 320px;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 24px;
+            right: 12px;
+            z-index: 10;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+            width: 220px;
+        }
+
+        #gradient {
+            height: 16px;
+            margin: 8px 0 4px;
+            background: linear-gradient(to right,
+                    #313695,
+                    #4575b4,
+                    #74add1,
+                    #abd9e9,
+                    #ffffbf,
+                    #fdae61,
+                    #f46d43,
+                    #d73027,
+                    #a50026);
+        }
+
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
         }
 
         #status {
-            margin-top: 20px;
+            margin-top: 6px;
+            font-size: 13px;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Thermal Confort</h1>
+    <div id="map"></div>
 
-    <p>Prova de lectura d'un COG remot.</p>
+    <div id="info">
+        <strong>Thermal Confort</strong>
+        <div>UTCI · 5 octubre 2026 · 09:00 UTC</div>
+        <div id="status">Carregant...</div>
+    </div>
 
-    <pre id="status">Carregant...</pre>
+    <div id="legend">
+        <strong>UTCI (°C)</strong>
+
+        <div id="gradient"></div>
+
+        <div class="legend-labels">
+            <span>-40</span>
+            <span>-20</span>
+            <span>0</span>
+            <span>20</span>
+            <span>40+</span>
+        </div>
+    </div>
 
     <script type="module">
-        import { fromUrl } from "https://cdn.jsdelivr.net/npm/geotiff/+esm";
+
+        import maplibregl from
+            "https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/+esm";
+
+        import { fromUrl } from
+            "https://cdn.jsdelivr.net/npm/geotiff/+esm";
+
 
         const status = document.getElementById("status");
 
-        const cogUrl =
+        const COG_URL =
             "./data/utci_2026-10-05T09-00-00.000000000.tif";
 
-        try {
+
+        // ------------------------------------------------------------
+        // MAPA
+        // ------------------------------------------------------------
+
+        const map = new maplibregl.Map({
+            container: "map",
+
+            style: {
+                version: 8,
+
+                sources: {
+                    osm: {
+                        type: "raster",
+                        tiles: [
+                            "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        ],
+                        tileSize: 256,
+                        attribution: "© OpenStreetMap contributors"
+                    }
+                },
+
+                layers: [
+                    {
+                        id: "osm",
+                        type: "raster",
+                        source: "osm"
+                    }
+                ]
+            },
+
+            center: [1.7, 41.7],
+            zoom: 7
+        });
+
+
+        map.addControl(
+            new maplibregl.NavigationControl(),
+            "top-right"
+        );
+
+
+        // ------------------------------------------------------------
+        // LLEGIR COG
+        // ------------------------------------------------------------
+
+        async function loadCOG() {
+
             status.textContent = "Obrint COG...";
 
-            const tiff = await fromUrl(cogUrl);
+            const tiff = await fromUrl(COG_URL);
 
             const image = await tiff.getImage();
 
@@ -55,22 +173,87 @@
 
             const bbox = image.getBoundingBox();
 
-            status.textContent = [
-                "COG obert correctament",
-                "",
-                `Width:  ${width}`,
-                `Height: ${height}`,
-                "",
-                `Bounding box:`,
-                bbox.join(", ")
-            ].join("\n");
+            console.log("COG:", {
+                width,
+                height,
+                bbox,
+                resolution: image.getResolution(),
+                samples: image.getSamplesPerPixel()
+            });
 
-        } catch (error) {
-            console.error(error);
 
             status.textContent =
-                "ERROR:\n\n" + error.toString();
+                `Raster: ${width} × ${height}`;
+
+
+            // ----------------------------------------------------------
+            // LLEGIR PIXELS
+            // ----------------------------------------------------------
+
+            const raster = await image.readRasters({
+                interleave: true
+            });
+
+            console.log("Raster length:", raster.length);
+            console.log("Primer valor:", raster[0]);
+
+
+            // ----------------------------------------------------------
+            // ESTADÍSTIQUES
+            // ----------------------------------------------------------
+
+            let min = Infinity;
+            let max = -Infinity;
+            let valid = 0;
+
+            for (let i = 0; i < raster.length; i++) {
+
+                const value = raster[i];
+
+                if (Number.isFinite(value)) {
+
+                    valid++;
+
+                    if (value < min) min = value;
+                    if (value > max) max = value;
+                }
+            }
+
+            console.log({
+                min,
+                max,
+                valid,
+                total: raster.length
+            });
+
+
+            status.textContent =
+                `UTCI: ${min.toFixed(1)} → ${max.toFixed(1)} °C · ` +
+                `${valid.toLocaleString()} píxels`;
+
+
+            // ----------------------------------------------------------
+            // DE MOMENT NOMÉS FEM LA LECTURA
+            // ----------------------------------------------------------
+
+            console.log("Bounding box:", bbox);
+            console.log("Raster carregat correctament.");
         }
+
+
+        map.on("load", () => {
+
+            loadCOG()
+                .catch(error => {
+
+                    console.error(error);
+
+                    status.textContent =
+                        "Error carregant el COG: " + error.message;
+                });
+
+        });
+
     </script>
 
 </body>
