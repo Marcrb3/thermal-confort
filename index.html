@@ -51,6 +51,7 @@
         #gradient {
             height: 16px;
             margin: 8px 0 4px;
+
             background: linear-gradient(to right,
                     #313695,
                     #4575b4,
@@ -82,11 +83,18 @@
 
     <div id="info">
         <strong>Thermal Confort</strong>
-        <div>UTCI · 5 octubre 2026 · 09:00 UTC</div>
-        <div id="status">Carregant...</div>
+
+        <div>
+            UTCI · 5 octubre 2026 · 09:00 UTC
+        </div>
+
+        <div id="status">
+            Carregant...
+        </div>
     </div>
 
     <div id="legend">
+
         <strong>UTCI (°C)</strong>
 
         <div id="gradient"></div>
@@ -98,9 +106,15 @@
             <span>20</span>
             <span>40+</span>
         </div>
+
     </div>
 
+
     <script type="module">
+
+        // ============================================================
+        // IMPORTS
+        // ============================================================
 
         import maplibregl from
             "https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/+esm";
@@ -111,49 +125,89 @@
         import proj4 from
             "https://cdn.jsdelivr.net/npm/proj4@2.19.10/+esm";
 
+
+        // ============================================================
+        // PROJECCIÓ
+        // ============================================================
+
+        /*
+         * ETRS89 / UTM zone 31N
+         *
+         * EPSG:25831
+         *
+         * El COG està en aquest CRS.
+         * proj4 no sempre coneix automàticament l'àlies EPSG,
+         * per això el definim explícitament.
+         */
+
         proj4.defs(
             "EPSG:25831",
             "+proj=utm +zone=31 +ellps=GRS80 +units=m +no_defs"
         );
 
 
-        const status = document.getElementById("status");
+        // ============================================================
+        // ELEMENTS HTML
+        // ============================================================
+
+        const status =
+            document.getElementById("status");
+
+
+        // ============================================================
+        // COG
+        // ============================================================
 
         const COG_URL =
             "./data/utci_2026-10-05T09-00-00.000000000.tif";
 
 
-        // ------------------------------------------------------------
+        // ============================================================
         // MAPA
-        // ------------------------------------------------------------
+        // ============================================================
 
         const map = new maplibregl.Map({
+
             container: "map",
 
             style: {
+
                 version: 8,
 
                 sources: {
+
                     osm: {
+
                         type: "raster",
+
                         tiles: [
                             "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                         ],
+
                         tileSize: 256,
-                        attribution: "© OpenStreetMap contributors"
+
+                        attribution:
+                            "© OpenStreetMap contributors"
                     }
                 },
 
                 layers: [
+
                     {
                         id: "osm",
+
                         type: "raster",
+
                         source: "osm"
                     }
                 ]
             },
 
-            center: [1.7, 41.7],
+            center: [
+                1.7,
+                41.7
+            ],
+
             zoom: 7
         });
 
@@ -164,258 +218,662 @@
         );
 
 
-        // ------------------------------------------------------------
-        // LLEGIR COG
-        // ------------------------------------------------------------
+        // ============================================================
+        // CARREGAR COG
+        // ============================================================
 
         async function loadCOG() {
 
-            status.textContent = "Obrint COG...";
+            status.textContent =
+                "Obrint COG...";
 
-            const tiff = await fromUrl(COG_URL);
-            const image = await tiff.getImage();
 
-            const width = image.getWidth();
-            const height = image.getHeight();
-            const bbox = image.getBoundingBox();
+            // --------------------------------------------------------
+            // OBRIR TIFF
+            // --------------------------------------------------------
+
+            const tiff =
+                await fromUrl(COG_URL);
+
+            const image =
+                await tiff.getImage();
+
+
+            const width =
+                image.getWidth();
+
+            const height =
+                image.getHeight();
+
+            const bbox =
+                image.getBoundingBox();
+
+            const resolution =
+                image.getResolution();
+
 
             console.log("COG:", {
+
                 width,
+
                 height,
+
                 bbox,
-                resolution: image.getResolution(),
-                samples: image.getSamplesPerPixel()
+
+                resolution,
+
+                samples:
+                    image.getSamplesPerPixel()
             });
 
 
-            // ----------------------------------------------------------
+            // ========================================================
             // LLEGIR UNA FINESTRA
-            // ----------------------------------------------------------
+            // ========================================================
+
+            /*
+             * De moment només llegim els primers 512 × 512 píxels.
+             *
+             * Això NO és encara un visor complet del COG.
+             * És una prova per comprovar que:
+             *
+             * COG → geotiff.js → RGBA → MapLibre
+             *
+             * funciona correctament.
+             */
 
             const windowSize = 512;
 
-            const raster = await image.readRasters({
-                window: [
-                    0,
-                    0,
-                    Math.min(windowSize, width),
-                    Math.min(windowSize, height)
-                ],
-                interleave: true
-            });
 
-            const rasterWidth = Math.min(windowSize, width);
-            const rasterHeight = Math.min(windowSize, height);
+            const raster =
+                await image.readRasters({
+
+                    window: [
+
+                        0,
+
+                        0,
+
+                        Math.min(
+                            windowSize,
+                            width
+                        ),
+
+                        Math.min(
+                            windowSize,
+                            height
+                        )
+                    ],
+
+                    interleave: true
+                });
 
 
-            // ----------------------------------------------------------
+            const rasterWidth =
+                Math.min(
+                    windowSize,
+                    width
+                );
+
+
+            const rasterHeight =
+                Math.min(
+                    windowSize,
+                    height
+                );
+
+
+            console.log(
+                "Finestra llegida:",
+                rasterWidth,
+                "×",
+                rasterHeight
+            );
+
+
+            // ========================================================
             // ESCALA UTCI → COLOR
-            // ----------------------------------------------------------
+            // ========================================================
 
             function utciColor(value) {
 
+                /*
+                 * Nodata / NaN
+                 */
+
                 if (!Number.isFinite(value)) {
-                    return [0, 0, 0, 0];
+
+                    return [
+                        0,
+                        0,
+                        0,
+                        0
+                    ];
                 }
 
-                // Simplificació provisional:
-                // -40 °C → blau
-                // +40 °C → vermell
 
-                const t = Math.max(
-                    0,
-                    Math.min(1, (value + 40) / 80)
-                );
+                /*
+                 * Escala provisional:
+                 *
+                 * -40 °C → blau
+                 *   0 °C → groc/blanc
+                 * +40 °C → vermell
+                 */
+
+                const t =
+                    Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            (value + 40) / 80
+                        )
+                    );
+
 
                 let r;
                 let g;
                 let b;
 
+
+                // ----------------------------------------------------
+                // -40 → -20
+                // ----------------------------------------------------
+
                 if (t < 0.25) {
 
-                    const p = t / 0.25;
+                    const p =
+                        t / 0.25;
 
-                    r = 49 + (69 - 49) * p;
-                    g = 54 + (117 - 54) * p;
-                    b = 149 + (180 - 149) * p;
 
-                } else if (t < 0.5) {
+                    r =
+                        49 +
+                        (69 - 49) * p;
 
-                    const p = (t - 0.25) / 0.25;
+                    g =
+                        54 +
+                        (117 - 54) * p;
 
-                    r = 69 + (255 - 69) * p;
-                    g = 117 + (255 - 117) * p;
-                    b = 180 + (191 - 180) * p;
-
-                } else if (t < 0.75) {
-
-                    const p = (t - 0.5) / 0.25;
-
-                    r = 255 + (244 - 255) * p;
-                    g = 255 + (109 - 255) * p;
-                    b = 191 + (67 - 191) * p;
-
-                } else {
-
-                    const p = (t - 0.75) / 0.25;
-
-                    r = 244 + (165 - 244) * p;
-                    g = 109 + (0 - 109) * p;
-                    b = 67 + (38 - 67) * p;
+                    b =
+                        149 +
+                        (180 - 149) * p;
                 }
 
+
+                // ----------------------------------------------------
+                // -20 → 0
+                // ----------------------------------------------------
+
+                else if (t < 0.5) {
+
+                    const p =
+                        (t - 0.25) / 0.25;
+
+
+                    r =
+                        69 +
+                        (255 - 69) * p;
+
+                    g =
+                        117 +
+                        (255 - 117) * p;
+
+                    b =
+                        180 +
+                        (191 - 180) * p;
+                }
+
+
+                // ----------------------------------------------------
+                // 0 → +20
+                // ----------------------------------------------------
+
+                else if (t < 0.75) {
+
+                    const p =
+                        (t - 0.5) / 0.25;
+
+
+                    r =
+                        255 +
+                        (244 - 255) * p;
+
+                    g =
+                        255 +
+                        (109 - 255) * p;
+
+                    b =
+                        191 +
+                        (67 - 191) * p;
+                }
+
+
+                // ----------------------------------------------------
+                // +20 → +40
+                // ----------------------------------------------------
+
+                else {
+
+                    const p =
+                        (t - 0.75) / 0.25;
+
+
+                    r =
+                        244 +
+                        (165 - 244) * p;
+
+                    g =
+                        109 +
+                        (0 - 109) * p;
+
+                    b =
+                        67 +
+                        (38 - 67) * p;
+                }
+
+
                 return [
+
                     Math.round(r),
+
                     Math.round(g),
+
                     Math.round(b),
+
                     220
                 ];
             }
 
 
-            // ----------------------------------------------------------
-            // CREAR IMATGE RGBA
-            // ----------------------------------------------------------
+            // ========================================================
+            // CREAR RGBA
+            // ========================================================
 
-            const pixels = new Uint8ClampedArray(
-                rasterWidth * rasterHeight * 4
-            );
+            const pixels =
+                new Uint8ClampedArray(
+                    rasterWidth *
+                    rasterHeight *
+                    4
+                );
 
-            for (let i = 0; i < raster.length; i++) {
 
-                const value = raster[i];
+            for (
+                let i = 0;
+                i < raster.length;
+                i++
+            ) {
 
-                const [r, g, b, a] = utciColor(value);
+                const value =
+                    raster[i];
 
-                const offset = i * 4;
 
-                pixels[offset] = r;
-                pixels[offset + 1] = g;
-                pixels[offset + 2] = b;
-                pixels[offset + 3] = a;
+                const [
+                    r,
+                    g,
+                    b,
+                    a
+                ] =
+                    utciColor(value);
+
+
+                const offset =
+                    i * 4;
+
+
+                pixels[offset] =
+                    r;
+
+                pixels[offset + 1] =
+                    g;
+
+                pixels[offset + 2] =
+                    b;
+
+                pixels[offset + 3] =
+                    a;
             }
 
 
-            // ----------------------------------------------------------
+            // ========================================================
             // CANVAS
-            // ----------------------------------------------------------
+            // ========================================================
 
-            const canvas = document.createElement("canvas");
+            const canvas =
+                document.createElement("canvas");
 
-            canvas.width = rasterWidth;
-            canvas.height = rasterHeight;
 
-            const context = canvas.getContext("2d");
+            canvas.width =
+                rasterWidth;
 
-            const imageData = new ImageData(
-                pixels,
-                rasterWidth,
-                rasterHeight
+            canvas.height =
+                rasterHeight;
+
+
+            const context =
+                canvas.getContext("2d");
+
+
+            const imageData =
+                new ImageData(
+                    pixels,
+                    rasterWidth,
+                    rasterHeight
+                );
+
+
+            context.putImageData(
+                imageData,
+                0,
+                0
             );
 
-            context.putImageData(imageData, 0, 0);
+
+            const imageUrl =
+                canvas.toDataURL(
+                    "image/png"
+                );
 
 
-            const imageUrl = canvas.toDataURL("image/png");
+            // ========================================================
+            // GEORREFERENCIACIÓ
+            // ========================================================
+
+            /*
+             * BBOX COMPLET DEL COG
+             *
+             * bbox:
+             *
+             * [minX, minY, maxX, maxY]
+             */
+
+            const minX =
+                bbox[0];
+
+            const minY =
+                bbox[1];
+
+            const maxX =
+                bbox[2];
+
+            const maxY =
+                bbox[3];
 
 
-            // ----------------------------------------------------------
-            // COORDENADES
-            // ----------------------------------------------------------
+            /*
+             * Resolució del raster.
+             *
+             * pixelWidth  → metres/píxel X
+             * pixelHeight → metres/píxel Y
+             */
 
-            const resolution = image.getResolution();
+            const pixelWidth =
+                resolution[0];
 
-            const pixelWidth = resolution[0];
-            const pixelHeight = Math.abs(resolution[1]);
+            const pixelHeight =
+                Math.abs(resolution[1]);
 
-            const minX = bbox[0];
-            const maxY = bbox[3];
+
+            /*
+             * IMPORTANT:
+             *
+             * No podem utilitzar maxX/minY per a la imatge,
+             * perquè només hem llegit una finestra de 512 × 512.
+             *
+             * La finestra comença a:
+             *
+             * columna 0
+             * fila 0
+             *
+             * Per tant:
+             *
+             * windowMinX = minX
+             * windowMaxY = maxY
+             *
+             * i calculem els altres dos extrems.
+             */
+
+            const windowMinX =
+                minX;
+
+            const windowMaxY =
+                maxY;
+
 
             const windowMaxX =
-                minX + rasterWidth * pixelWidth;
+                windowMinX +
+                rasterWidth *
+                pixelWidth;
+
 
             const windowMinY =
-                maxY - rasterHeight * pixelHeight;
-
-            const topLeft = proj4(
-                "EPSG:25831",
-                "EPSG:4326",
-                [minX, maxY]
-            );
-
-            const bottomRight = proj4(
-                "EPSG:25831",
-                "EPSG:4326",
-                [maxX, minY]
-            );
-
-            console.log("Top-left:", topLeft);
-            console.log("Bottom-right:", bottomRight);
+                windowMaxY -
+                rasterHeight *
+                pixelHeight;
 
 
-            // ----------------------------------------------------------
-            // MAPLIBRE IMAGE SOURCE
-            // ----------------------------------------------------------
-
-            map.addSource("utci", {
-                type: "image",
-
-                url: imageUrl,
-
-                coordinates: [
-                    topLeft,
-                    [bottomRight[0], topLeft[1]],
-                    bottomRight,
-                    [topLeft[0], bottomRight[1]]
+            console.log(
+                "BBOX COG complet:",
+                [
+                    minX,
+                    minY,
+                    maxX,
+                    maxY
                 ]
-            });
+            );
 
+
+            console.log(
+                "BBOX finestra:",
+                [
+                    windowMinX,
+                    windowMinY,
+                    windowMaxX,
+                    windowMaxY
+                ]
+            );
+
+
+            // ========================================================
+            // TRANSFORMAR A EPSG:4326
+            // ========================================================
+
+            const topLeft =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [
+                        windowMinX,
+                        windowMaxY
+                    ]
+                );
+
+
+            const topRight =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [
+                        windowMaxX,
+                        windowMaxY
+                    ]
+                );
+
+
+            const bottomRight =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [
+                        windowMaxX,
+                        windowMinY
+                    ]
+                );
+
+
+            const bottomLeft =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [
+                        windowMinX,
+                        windowMinY
+                    ]
+                );
+
+
+            console.log(
+                "Top-left:",
+                topLeft
+            );
+
+            console.log(
+                "Top-right:",
+                topRight
+            );
+
+            console.log(
+                "Bottom-right:",
+                bottomRight
+            );
+
+            console.log(
+                "Bottom-left:",
+                bottomLeft
+            );
+
+
+            // ========================================================
+            // AFEGIR COG COM A IMAGE SOURCE
+            // ========================================================
+
+            map.addSource(
+                "utci",
+                {
+
+                    type: "image",
+
+                    url: imageUrl,
+
+                    /*
+                     * MapLibre espera:
+                     *
+                     * top-left
+                     * top-right
+                     * bottom-right
+                     * bottom-left
+                     */
+
+                    coordinates: [
+
+                        topLeft,
+
+                        topRight,
+
+                        bottomRight,
+
+                        bottomLeft
+                    ]
+                }
+            );
+
+
+            // ========================================================
+            // CAPA UTCI
+            // ========================================================
 
             map.addLayer({
+
                 id: "utci",
+
                 type: "raster",
 
                 source: "utci",
 
                 paint: {
-                    "raster-opacity": 0.75,
-                    "raster-fade-duration": 0
+
+                    "raster-opacity":
+                        0.75,
+
+                    "raster-fade-duration":
+                        0
                 }
             });
 
 
-            // ----------------------------------------------------------
-            // ZOOM AL RASTER
-            // ----------------------------------------------------------
+            // ========================================================
+            // ZOOM
+            // ========================================================
 
             map.fitBounds(
+
                 [
-                    [topLeft[0], bottomRight[1]],
-                    [bottomRight[0], topLeft[1]]
+                    [
+                        windowMinX === undefined
+                            ? topLeft[0]
+                            : Math.min(
+                                topLeft[0],
+                                bottomLeft[0]
+                            ),
+
+                        Math.min(
+                            bottomLeft[1],
+                            bottomRight[1]
+                        )
+                    ],
+
+                    [
+                        Math.max(
+                            topRight[0],
+                            bottomRight[0]
+                        ),
+
+                        Math.max(
+                            topLeft[1],
+                            topRight[1]
+                        )
+                    ]
                 ],
+
                 {
+
                     padding: 40,
+
                     duration: 0
                 }
             );
 
 
+            // ========================================================
+            // ESTAT
+            // ========================================================
+
             status.textContent =
                 `UTCI carregat · finestra ${rasterWidth} × ${rasterHeight}`;
         }
 
-        map.on("load", () => {
 
-            loadCOG()
-                .catch(error => {
+        // ============================================================
+        // INICIALITZAR
+        // ============================================================
 
-                    console.error(error);
+        map.on(
+            "load",
+            () => {
 
-                    status.textContent =
-                        "Error carregant el COG: " + error.message;
-                });
+                loadCOG()
+                    .catch(
+                        error => {
 
-        });
+                            console.error(
+                                error
+                            );
+
+                            status.textContent =
+                                "Error carregant el COG: " +
+                                error.message;
+                        }
+                    );
+            }
+        );
 
     </script>
 
