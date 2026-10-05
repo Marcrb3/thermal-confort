@@ -190,16 +190,28 @@
             // LLEGIR PIXELS
             // ----------------------------------------------------------
 
+            // ----------------------------------------------------------
+            // LLEGIR NOMÉS UNA FINESTRA
+            // ----------------------------------------------------------
+
+            const windowSize = 512;
+
             const raster = await image.readRasters({
+                window: [
+                    0,
+                    0,
+                    Math.min(windowSize, width),
+                    Math.min(windowSize, height)
+                ],
                 interleave: true
             });
 
-            console.log("Raster length:", raster.length);
+            console.log("Raster llegit:", raster.length);
             console.log("Primer valor:", raster[0]);
 
 
             // ----------------------------------------------------------
-            // ESTADÍSTIQUES
+            // ESTADÍSTIQUES DE LA FINESTRA
             // ----------------------------------------------------------
 
             let min = Infinity;
@@ -226,10 +238,11 @@
                 total: raster.length
             });
 
-
             status.textContent =
-                `UTCI: ${min.toFixed(1)} → ${max.toFixed(1)} °C · ` +
-                `${valid.toLocaleString()} píxels`;
+                `Finestra 512 × 512 · UTCI: ` +
+                `${min.toFixed(1)} → ${max.toFixed(1)} °C`;
+
+            console.log("Lectura parcial correcta.");
 
 
             // ----------------------------------------------------------
