@@ -134,10 +134,6 @@
          * ETRS89 / UTM zone 31N
          *
          * EPSG:25831
-         *
-         * El COG està en aquest CRS.
-         * proj4 no sempre coneix automàticament l'àlies EPSG,
-         * per això el definim explícitament.
          */
 
         proj4.defs(
@@ -219,7 +215,7 @@
 
 
         // ============================================================
-        // CARREGAR COG
+        // LLEGIR COG
         // ============================================================
 
         async function loadCOG() {
@@ -267,64 +263,39 @@
             });
 
 
+            status.textContent =
+                "Llegint raster complet...";
+
+
             // ========================================================
-            // LLEGIR UNA FINESTRA
+            // LLEGIR TOT EL RASTER
             // ========================================================
 
             /*
-             * De moment només llegim els primers 512 × 512 píxels.
+             * Ara llegim tot el raster:
              *
-             * Això NO és encara un visor complet del COG.
-             * És una prova per comprovar que:
+             * 2690 × 2620 ≈ 7 milions de píxels
              *
-             * COG → geotiff.js → RGBA → MapLibre
-             *
-             * funciona correctament.
+             * És una prova inicial.
+             * Més endavant aprofitarem els overviews del COG
+             * per no haver de llegir tot el raster.
              */
-
-            const windowSize = 512;
-
 
             const raster =
                 await image.readRasters({
-
-                    window: [
-
-                        0,
-
-                        0,
-
-                        Math.min(
-                            windowSize,
-                            width
-                        ),
-
-                        Math.min(
-                            windowSize,
-                            height
-                        )
-                    ],
-
                     interleave: true
                 });
 
 
             const rasterWidth =
-                Math.min(
-                    windowSize,
-                    width
-                );
-
+                width;
 
             const rasterHeight =
-                Math.min(
-                    windowSize,
-                    height
-                );
+                height;
 
 
             console.log(
-                "Finestra llegida:",
+                "Raster complet llegit:",
                 rasterWidth,
                 "×",
                 rasterHeight
@@ -485,8 +456,12 @@
 
 
             // ========================================================
-            // CREAR RGBA
+            // CREAR IMATGE RGBA
             // ========================================================
+
+            status.textContent =
+                "Generant visualització...";
+
 
             const pixels =
                 new Uint8ClampedArray(
@@ -574,15 +549,15 @@
 
 
             // ========================================================
-            // GEORREFERENCIACIÓ
+            // BBOX DEL COG
             // ========================================================
 
             /*
-             * BBOX COMPLET DEL COG
-             *
-             * bbox:
+             * GeoTIFF:
              *
              * [minX, minY, maxX, maxY]
+             *
+             * EPSG:25831
              */
 
             const minX =
@@ -598,60 +573,8 @@
                 bbox[3];
 
 
-            /*
-             * Resolució del raster.
-             *
-             * pixelWidth  → metres/píxel X
-             * pixelHeight → metres/píxel Y
-             */
-
-            const pixelWidth =
-                resolution[0];
-
-            const pixelHeight =
-                Math.abs(resolution[1]);
-
-
-            /*
-             * IMPORTANT:
-             *
-             * No podem utilitzar maxX/minY per a la imatge,
-             * perquè només hem llegit una finestra de 512 × 512.
-             *
-             * La finestra comença a:
-             *
-             * columna 0
-             * fila 0
-             *
-             * Per tant:
-             *
-             * windowMinX = minX
-             * windowMaxY = maxY
-             *
-             * i calculem els altres dos extrems.
-             */
-
-            const windowMinX =
-                minX;
-
-            const windowMaxY =
-                maxY;
-
-
-            const windowMaxX =
-                windowMinX +
-                rasterWidth *
-                pixelWidth;
-
-
-            const windowMinY =
-                windowMaxY -
-                rasterHeight *
-                pixelHeight;
-
-
             console.log(
-                "BBOX COG complet:",
+                "BBOX COG:",
                 [
                     minX,
                     minY,
@@ -661,19 +584,8 @@
             );
 
 
-            console.log(
-                "BBOX finestra:",
-                [
-                    windowMinX,
-                    windowMinY,
-                    windowMaxX,
-                    windowMaxY
-                ]
-            );
-
-
             // ========================================================
-            // TRANSFORMAR A EPSG:4326
+            // TRANSFORMACIÓ EPSG:25831 → EPSG:4326
             // ========================================================
 
             const topLeft =
@@ -681,8 +593,8 @@
                     "EPSG:25831",
                     "EPSG:4326",
                     [
-                        windowMinX,
-                        windowMaxY
+                        minX,
+                        maxY
                     ]
                 );
 
@@ -692,8 +604,8 @@
                     "EPSG:25831",
                     "EPSG:4326",
                     [
-                        windowMaxX,
-                        windowMaxY
+                        maxX,
+                        maxY
                     ]
                 );
 
@@ -703,8 +615,8 @@
                     "EPSG:25831",
                     "EPSG:4326",
                     [
-                        windowMaxX,
-                        windowMinY
+                        maxX,
+                        minY
                     ]
                 );
 
@@ -714,8 +626,8 @@
                     "EPSG:25831",
                     "EPSG:4326",
                     [
-                        windowMinX,
-                        windowMinY
+                        minX,
+                        minY
                     ]
                 );
 
@@ -742,7 +654,7 @@
 
 
             // ========================================================
-            // AFEGIR COG COM A IMAGE SOURCE
+            // MAPLIBRE IMAGE SOURCE
             // ========================================================
 
             map.addSource(
@@ -752,15 +664,6 @@
                     type: "image",
 
                     url: imageUrl,
-
-                    /*
-                     * MapLibre espera:
-                     *
-                     * top-left
-                     * top-right
-                     * bottom-right
-                     * bottom-left
-                     */
 
                     coordinates: [
 
@@ -800,19 +703,17 @@
 
 
             // ========================================================
-            // ZOOM
+            // ZOOM A TOT EL RASTER
             // ========================================================
 
             map.fitBounds(
 
                 [
                     [
-                        windowMinX === undefined
-                            ? topLeft[0]
-                            : Math.min(
-                                topLeft[0],
-                                bottomLeft[0]
-                            ),
+                        Math.min(
+                            topLeft[0],
+                            bottomLeft[0]
+                        ),
 
                         Math.min(
                             bottomLeft[1],
@@ -843,11 +744,11 @@
 
 
             // ========================================================
-            // ESTAT
+            // FINAL
             // ========================================================
 
             status.textContent =
-                `UTCI carregat · finestra ${rasterWidth} × ${rasterHeight}`;
+                `UTCI carregat · ${rasterWidth} × ${rasterHeight} píxels`;
         }
 
 
