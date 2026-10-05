@@ -1,13 +1,22 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ca">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Thermal Confort — UTCI</title>
+    <title>UTCI Catalunya</title>
 
-    <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
+    <!-- MapLibre -->
+    <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+
+    <!-- GeoTIFF -->
+    <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+
+    <!-- PROJ4 -->
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.19.10/dist/proj4.js"></script>
 
     <style>
         html,
@@ -16,7 +25,8 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            font-family: system-ui, sans-serif;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
 
         #map {
@@ -24,108 +34,130 @@
             height: 100%;
         }
 
+        /* ---------------------------------------------------------
+       PANEL
+    --------------------------------------------------------- */
 
-        /* =========================================================
-           INFO
-           ========================================================= */
-
-        #info {
+        #panel {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 15px;
+            left: 15px;
             z-index: 10;
 
-            background: white;
+            width: 320px;
+            max-width: calc(100vw - 30px);
 
-            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
 
-            border-radius: 6px;
+            border-radius: 8px;
 
-            box-shadow:
-                0 2px 8px rgb(0 0 0 / 20%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 
-            max-width: 320px;
-        }
-
-
-        /* =========================================================
-           SELECTOR
-           ========================================================= */
-
-        #controls {
-            position: absolute;
-
-            top: 12px;
-            right: 60px;
-
-            z-index: 10;
-
-            background: white;
-
-            padding: 10px 12px;
-
-            border-radius: 6px;
-
-            box-shadow:
-                0 2px 8px rgb(0 0 0 / 20%);
-        }
-
-        #mode {
             font-size: 14px;
+        }
 
-            padding: 5px 8px;
+        #panel h1 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+        }
 
-            border: 1px solid #ccc;
+        #panel label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
 
-            border-radius: 4px;
+        #visualizationMode {
+            width: 100%;
+            padding: 7px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
 
-            background: white;
+        /* ---------------------------------------------------------
+       TIME CONTROL
+    --------------------------------------------------------- */
 
+        #timeControl {
+            margin-top: 5px;
+        }
+
+        #timeLabel {
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        #timeSlider {
+            width: 100%;
             cursor: pointer;
         }
 
-
-        /* =========================================================
-           LEGEND
-           ========================================================= */
-
-        #legend {
-            position: absolute;
-
-            bottom: 24px;
-            right: 12px;
-
-            z-index: 10;
-
-            background: white;
-
-            padding: 12px;
-
-            border-radius: 6px;
-
-            box-shadow:
-                0 2px 8px rgb(0 0 0 / 20%);
-
-            width: 260px;
-
-            max-height: 70vh;
-
-            overflow-y: auto;
+        #timeButtons {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
         }
 
+        #timeButtons button {
+            border: 1px solid #aaa;
+            background: white;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
 
-        /* =========================================================
-           CONTÍNUA
-           ========================================================= */
+        #timeButtons button:hover {
+            background: #eee;
+        }
+
+        #loading {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* ---------------------------------------------------------
+       LEGEND
+    --------------------------------------------------------- */
+
+        #legend {
+            margin-top: 15px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            margin-right: 7px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        /* ---------------------------------------------------------
+       CONTINUOUS LEGEND
+    --------------------------------------------------------- */
+
+        #continuousLegend {
+            display: none;
+            margin-top: 15px;
+        }
 
         #gradient {
-            height: 16px;
+            height: 18px;
 
-            margin: 8px 0 4px;
-
-            background:
-                linear-gradient(to right,
-
+            background: linear-gradient(to right,
                     #313695,
                     #4575b4,
                     #74add1,
@@ -135,105 +167,45 @@
                     #f46d43,
                     #d73027,
                     #a50026);
+
+            border: 1px solid rgba(0, 0, 0, 0.2);
         }
 
-        .legend-labels {
+        .gradient-labels {
             display: flex;
-
             justify-content: space-between;
-
+            margin-top: 4px;
             font-size: 11px;
         }
 
+        /* ---------------------------------------------------------
+       MAPLIBRE
+    --------------------------------------------------------- */
 
-        /* =========================================================
-           CATEGORIES
-           ========================================================= */
-
-        #categoryLegend {
-            display: none;
-
-            margin-top: 8px;
-        }
-
-        .category {
-            display: flex;
-
-            align-items: center;
-
-            margin: 5px 0;
-
-            font-size: 12px;
-
-            line-height: 1.2;
-        }
-
-        .category-color {
-            width: 18px;
-            height: 18px;
-
-            flex: 0 0 18px;
-
-            margin-right: 8px;
-
-            border-radius: 3px;
-        }
-
-
-        /* =========================================================
-           STATUS
-           ========================================================= */
-
-        #status {
-            margin-top: 6px;
-
-            font-size: 13px;
+        .maplibregl-ctrl-top-right {
+            top: 10px;
+            right: 10px;
         }
     </style>
-
 </head>
-
 
 <body>
 
-
-    <!-- ============================================================
-         MAPA
-         ============================================================ -->
-
     <div id="map"></div>
 
+    <div id="panel">
 
-    <!-- ============================================================
-         INFORMACIÓ
-         ============================================================ -->
+        <h1>Confort tèrmic — Catalunya</h1>
 
-    <div id="info">
+        <!-- -------------------------------------------------------
+       MODE
+  -------------------------------------------------------- -->
 
-        <strong>Thermal Confort</strong>
-
-        <div>
-            UTCI · 5 octubre 2026 · 09:00 UTC
-        </div>
-
-        <div id="status">
-            Carregant...
-        </div>
-
-    </div>
-
-
-    <!-- ============================================================
-         SELECTOR
-         ============================================================ -->
-
-    <div id="controls">
-
-        <label for="mode">
-            Visualització:
+        <label for="visualizationMode">
+            Visualització
         </label>
 
-        <select id="mode">
+        <select id="visualizationMode">
 
             <option value="utci">
                 UTCI (°C)
@@ -245,159 +217,122 @@
 
         </select>
 
-    </div>
+
+        <!-- -------------------------------------------------------
+       TIME
+  -------------------------------------------------------- -->
+
+        <div id="timeControl">
+
+            <div id="timeLabel">
+                Carregant...
+            </div>
+
+            <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" />
+
+            <div id="timeButtons">
+
+                <button id="previousButton">
+                    ◀
+                </button>
+
+                <button id="playButton">
+                    ▶
+                </button>
+
+                <button id="nextButton">
+                    ▶
+                </button>
+
+            </div>
+
+        </div>
 
 
-    <!-- ============================================================
-         LLEGENDA
-         ============================================================ -->
-
-    <div id="legend">
-
-        <strong id="legendTitle">
-            UTCI (°C)
-        </strong>
+        <div id="loading">
+            Carregant dades...
+        </div>
 
 
-        <!-- --------------------------------------------------------
-             LLEGENDA CONTÍNUA
-             -------------------------------------------------------- -->
+        <!-- -------------------------------------------------------
+       LEGEND
+  -------------------------------------------------------- -->
+
+        <div id="legend">
+
+            <div class="legend-title">
+                Estrès tèrmic UTCI
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#313695"></div>
+                &lt; −40 °C — Fred extrem
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#4575b4"></div>
+                −40 a −27 °C — Fred molt fort
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#74add1"></div>
+                −27 a −13 °C — Fred fort
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#abd9e9"></div>
+                −13 a 0 °C — Fred moderat
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#d9ef8b"></div>
+                0 a 9 °C — Fred lleu
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#ffffbf"></div>
+                9 a 26 °C — Sense estrès tèrmic
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#fee08b"></div>
+                26 a 32 °C — Calor moderada
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#fdae61"></div>
+                32 a 38 °C — Calor forta
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#f46d43"></div>
+                38 a 46 °C — Calor molt forta
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-color" style="background:#a50026"></div>
+                &gt; 46 °C — Calor extrema
+            </div>
+
+        </div>
+
+
+        <!-- -------------------------------------------------------
+       CONTINUOUS UTCI LEGEND
+  -------------------------------------------------------- -->
 
         <div id="continuousLegend">
 
+            <div class="legend-title">
+                UTCI
+            </div>
+
             <div id="gradient"></div>
 
-            <div class="legend-labels">
-
-                <span>-40</span>
-
-                <span>-20</span>
-
-                <span>0</span>
-
-                <span>20</span>
-
-                <span>40+</span>
-
-            </div>
-
-        </div>
-
-
-        <!-- --------------------------------------------------------
-             LLEGENDA CATEGORIES
-             -------------------------------------------------------- -->
-
-        <div id="categoryLegend">
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#313695"></div>
-
-                <span>
-                    &lt; −40 · Fred extrem
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#4575b4"></div>
-
-                <span>
-                    −40 a −27 · Fred molt fort
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#74add1"></div>
-
-                <span>
-                    −27 a −13 · Fred fort
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#abd9e9"></div>
-
-                <span>
-                    −13 a 0 · Fred moderat
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#d9ef8b"></div>
-
-                <span>
-                    0 a 9 · Fred lleu
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#ffffbf"></div>
-
-                <span>
-                    9 a 26 · Sense estrès tèrmic
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#fee08b"></div>
-
-                <span>
-                    26 a 32 · Calor moderada
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#fdae61"></div>
-
-                <span>
-                    32 a 38 · Calor forta
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#d73027"></div>
-
-                <span>
-                    38 a 46 · Calor molt forta
-                </span>
-
-            </div>
-
-
-            <div class="category">
-
-                <div class="category-color" style="background:#a50026"></div>
-
-                <span>
-                    &gt;46 · Calor extrema
-                </span>
-
+            <div class="gradient-labels">
+                <span>−40 °C</span>
+                <span>0 °C</span>
+                <span>40 °C</span>
             </div>
 
         </div>
@@ -405,30 +340,68 @@
     </div>
 
 
-    <!-- ============================================================
-         JAVASCRIPT
-         ============================================================ -->
+    <script>
 
-    <script type="module">
+        /* =========================================================
+           CONFIGURACIÓ
+        ========================================================= */
+
+        const DATA_DIR = "./data/";
+
+        /*
+         * IMPORTANT:
+         *
+         * GitHub Pages no permet descobrir automàticament
+         * els fitxers d'un directori.
+         *
+         * Per tant, aquí indiquem explícitament els TIF.
+         *
+         * Afegeix-hi tots els que pugis a GitHub.
+         */
+
+        const forecastFiles = [
+
+            "utci_2026-10-05T09-00-00.000000000.tif",
+
+            "utci_2026-10-05T12-00-00.000000000.tif",
+            "utci_2026-10-05T15-00-00.000000000.tif",
+            "utci_2026-10-05T18-00-00.000000000.tif",
+            "utci_2026-10-05T21-00-00.000000000.tif",
+
+            "utci_2026-10-06T00-00-00.000000000.tif",
+            "utci_2026-10-06T03-00-00.000000000.tif",
+            "utci_2026-10-06T06-00-00.000000000.tif",
+            "utci_2026-10-06T09-00-00.000000000.tif",
+            "utci_2026-10-06T12-00-00.000000000.tif",
+            "utci_2026-10-06T15-00-00.000000000.tif",
+            "utci_2026-10-06T18-00-00.000000000.tif",
+            "utci_2026-10-06T21-00-00.000000000.tif",
+
+            "utci_2026-10-07T00-00-00.000000000.tif",
+            "utci_2026-10-07T03-00-00.000000000.tif",
+            "utci_2026-10-07T06-00-00.000000000.tif",
+            "utci_2026-10-07T09-00-00.000000000.tif",
+            "utci_2026-10-07T12-00-00.000000000.tif",
+            "utci_2026-10-07T15-00-00.000000000.tif",
+            "utci_2026-10-07T18-00-00.000000000.tif",
+            "utci_2026-10-07T21-00-00.000000000.tif",
+
+            "utci_2026-10-08T00-00-00.000000000.tif",
+            "utci_2026-10-08T03-00-00.000000000.tif",
+            "utci_2026-10-08T06-00-00.000000000.tif",
+            "utci_2026-10-08T09-00-00.000000000.tif",
+            "utci_2026-10-08T12-00-00.000000000.tif",
+            "utci_2026-10-08T15-00-00.000000000.tif",
+            "utci_2026-10-08T18-00-00.000000000.tif",
+            "utci_2026-10-08T21-00-00.000000000.tif"
+
+        ];
 
 
-        // ============================================================
-        // IMPORTS
-        // ============================================================
-
-        import maplibregl from
-            "https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/+esm";
-
-        import { fromUrl } from
-            "https://cdn.jsdelivr.net/npm/geotiff/+esm";
-
-        import proj4 from
-            "https://cdn.jsdelivr.net/npm/proj4@2.19.10/+esm";
-
-
-        // ============================================================
-        // EPSG:25831
-        // ============================================================
+        /* =========================================================
+           PROJ4
+           EPSG:25831 = ETRS89 / UTM zone 31N
+        ========================================================= */
 
         proj4.defs(
             "EPSG:25831",
@@ -436,86 +409,801 @@
         );
 
 
-        // ============================================================
-        // ELEMENTS
-        // ============================================================
+        /* =========================================================
+           ELEMENTS HTML
+        ========================================================= */
 
-        const status =
-            document.getElementById("status");
+        const slider = document.getElementById("timeSlider");
 
-        const mode =
-            document.getElementById("mode");
+        const timeLabel = document.getElementById("timeLabel");
 
-        const legendTitle =
-            document.getElementById("legendTitle");
+        const loading = document.getElementById("loading");
+
+        const modeSelect =
+            document.getElementById("visualizationMode");
 
         const continuousLegend =
             document.getElementById("continuousLegend");
 
-        const categoryLegend =
-            document.getElementById("categoryLegend");
+        const previousButton =
+            document.getElementById("previousButton");
+
+        const nextButton =
+            document.getElementById("nextButton");
+
+        const playButton =
+            document.getElementById("playButton");
 
 
-        // ============================================================
-        // COG
-        // ============================================================
+        /* =========================================================
+           ESTAT
+        ========================================================= */
 
-        const COG_URL =
-            "./data/utci_2026-10-05T09-00-00.000000000.tif";
+        let map = null;
+
+        let currentIndex = 0;
+
+        let currentMode = "utci";
+
+        let animationTimer = null;
+
+        /*
+         * Cache dels rasters.
+         *
+         * Cada entrada conté:
+         *
+         * {
+         *   raster,
+         *   width,
+         *   height,
+         *   bbox,
+         *   coordinates
+         * }
+         */
+
+        const rasterCache = new Map();
 
 
-        // ============================================================
-        // MAPA
-        // ============================================================
+        /* =========================================================
+           UTCI → COLOR
+        ========================================================= */
 
-        const map = new maplibregl.Map({
+        function stressColor(value) {
 
-            container: "map",
+            if (!Number.isFinite(value)) {
+                return [0, 0, 0, 0];
+            }
 
-            style: {
+            if (value < -40) {
+                return [49, 54, 149, 255];
+            }
 
-                version: 8,
+            if (value < -27) {
+                return [69, 117, 180, 255];
+            }
 
-                sources: {
+            if (value < -13) {
+                return [116, 173, 209, 255];
+            }
 
-                    osm: {
+            if (value < 0) {
+                return [171, 217, 233, 255];
+            }
 
-                        type: "raster",
+            if (value < 9) {
+                return [217, 239, 139, 255];
+            }
 
-                        tiles: [
-                            "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        ],
+            if (value < 26) {
+                return [255, 255, 191, 255];
+            }
 
-                        tileSize: 256,
+            if (value < 32) {
+                return [254, 224, 139, 255];
+            }
 
-                        attribution:
-                            "© OpenStreetMap contributors"
-                    }
+            if (value < 38) {
+                return [253, 174, 97, 255];
+            }
 
-                },
+            if (value < 46) {
+                return [244, 109, 67, 255];
+            }
 
-                layers: [
+            return [165, 0, 38, 255];
+        }
 
-                    {
-                        id: "osm",
 
-                        type: "raster",
+        /* =========================================================
+           UTCI CONTINUOUS → COLOR
+        ========================================================= */
 
-                        source: "osm"
-                    }
+        function interpolateColor(
+            value,
+            min,
+            max
+        ) {
+
+            if (!Number.isFinite(value)) {
+                return [0, 0, 0, 0];
+            }
+
+            let t =
+                (value - min) /
+                (max - min);
+
+            t = Math.max(0, Math.min(1, t));
+
+            const stops = [
+
+                [49, 54, 149],
+
+                [69, 117, 180],
+
+                [116, 173, 209],
+
+                [171, 217, 233],
+
+                [255, 255, 191],
+
+                [253, 174, 97],
+
+                [244, 109, 67],
+
+                [215, 48, 39],
+
+                [165, 0, 38]
+
+            ];
+
+            const position =
+                t * (stops.length - 1);
+
+            const index =
+                Math.min(
+                    Math.floor(position),
+                    stops.length - 2
+                );
+
+            const localT =
+                position - index;
+
+            const c1 = stops[index];
+
+            const c2 = stops[index + 1];
+
+            return [
+
+                Math.round(
+                    c1[0] +
+                    (c2[0] - c1[0]) * localT
+                ),
+
+                Math.round(
+                    c1[1] +
+                    (c2[1] - c1[1]) * localT
+                ),
+
+                Math.round(
+                    c1[2] +
+                    (c2[2] - c1[2]) * localT
+                ),
+
+                255
+
+            ];
+
+        }
+
+
+        /* =========================================================
+           RASTER → PNG
+        ========================================================= */
+
+        function rasterToCanvas(
+            raster,
+            width,
+            height
+        ) {
+
+            const canvas =
+                document.createElement("canvas");
+
+            canvas.width = width;
+
+            canvas.height = height;
+
+            const context =
+                canvas.getContext("2d");
+
+            const imageData =
+                context.createImageData(
+                    width,
+                    height
+                );
+
+            const pixels =
+                imageData.data;
+
+            for (
+                let i = 0;
+                i < raster.length;
+                i++
+            ) {
+
+                const value = raster[i];
+
+                let color;
+
+                if (currentMode === "stress") {
+
+                    color =
+                        stressColor(value);
+
+                } else {
+
+                    /*
+                     * Escala contínua provisional.
+                     *
+                     * Posteriorment podem ajustar-la
+                     * automàticament segons el mínim/màxim
+                     * del conjunt de dades.
+                     */
+
+                    color =
+                        interpolateColor(
+                            value,
+                            -40,
+                            40
+                        );
+
+                }
+
+                const p = i * 4;
+
+                pixels[p] =
+                    color[0];
+
+                pixels[p + 1] =
+                    color[1];
+
+                pixels[p + 2] =
+                    color[2];
+
+                pixels[p + 3] =
+                    color[3];
+
+            }
+
+            context.putImageData(
+                imageData,
+                0,
+                0
+            );
+
+            return canvas;
+
+        }
+
+
+        /* =========================================================
+           CARREGAR GEOTIFF
+        ========================================================= */
+
+        async function loadRaster(
+            filename
+        ) {
+
+            if (rasterCache.has(filename)) {
+
+                return rasterCache.get(filename);
+
+            }
+
+            loading.textContent =
+                `Carregant ${filename}...`;
+
+            const url =
+                DATA_DIR + filename;
+
+            const response =
+                await fetch(url);
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `No s'ha pogut descarregar ${url}`
+                );
+
+            }
+
+            const arrayBuffer =
+                await response.arrayBuffer();
+
+            const tiff =
+                await GeoTIFF.fromArrayBuffer(
+                    arrayBuffer
+                );
+
+            const image =
+                await tiff.getImage();
+
+            const width =
+                image.getWidth();
+
+            const height =
+                image.getHeight();
+
+            const bbox =
+                image.getBoundingBox();
+
+            /*
+             * Llegim tot el raster.
+             *
+             * És viable per aquest MVP perquè
+             * tenim un únic raster de Catalunya.
+             */
+
+            const raster =
+                await image.readRasters({
+                    interleave: true
+                });
+
+            /*
+             * Bounding box EPSG:25831
+             *
+             * [minX, minY, maxX, maxY]
+             */
+
+            const minX = bbox[0];
+
+            const minY = bbox[1];
+
+            const maxX = bbox[2];
+
+            const maxY = bbox[3];
+
+
+            /* -------------------------------------------------------
+               Transformació a WGS84
+            -------------------------------------------------------- */
+
+            const topLeft =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [minX, maxY]
+                );
+
+            const topRight =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [maxX, maxY]
+                );
+
+            const bottomRight =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [maxX, minY]
+                );
+
+            const bottomLeft =
+                proj4(
+                    "EPSG:25831",
+                    "EPSG:4326",
+                    [minX, minY]
+                );
+
+
+            const data = {
+
+                raster,
+
+                width,
+
+                height,
+
+                bbox,
+
+                coordinates: [
+
+                    topLeft,
+
+                    topRight,
+
+                    bottomRight,
+
+                    bottomLeft
 
                 ]
 
-            },
+            };
 
-            center: [
-                1.7,
-                41.7
-            ],
 
-            zoom: 7
+            rasterCache.set(
+                filename,
+                data
+            );
 
-        });
+
+            return data;
+
+        }
+
+
+        /* =========================================================
+           MOSTRAR RASTER
+        ========================================================= */
+
+        async function showRaster(
+            index
+        ) {
+
+            currentIndex = index;
+
+            const filename =
+                forecastFiles[index];
+
+            slider.value =
+                index;
+
+            updateTimeLabel(filename);
+
+            try {
+
+                const data =
+                    await loadRaster(filename);
+
+
+                /* -----------------------------------------------------
+                   Canvas acolorit
+                ----------------------------------------------------- */
+
+                const canvas =
+                    rasterToCanvas(
+                        data.raster,
+                        data.width,
+                        data.height
+                    );
+
+
+                /* -----------------------------------------------------
+                   ImageSource
+                ----------------------------------------------------- */
+
+                const source =
+                    map.getSource("utci");
+
+
+                if (!source) {
+
+                    map.addSource(
+                        "utci",
+                        {
+                            type: "image",
+
+                            coordinates:
+                                data.coordinates,
+
+                            url:
+                                canvas.toDataURL(
+                                    "image/png"
+                                )
+                        }
+                    );
+
+
+                    map.addLayer({
+
+                        id: "utci",
+
+                        type: "raster",
+
+                        source: "utci",
+
+                        paint: {
+
+                            "raster-opacity": 0.75,
+
+                            "raster-fade-duration": 0
+
+                        }
+
+                    });
+
+                } else {
+
+                    /*
+                     * MapLibre permet actualitzar
+                     * una ImageSource existent.
+                     */
+
+                    source.updateImage({
+
+                        image: canvas,
+
+                        coordinates:
+                            data.coordinates
+
+                    });
+
+                }
+
+
+                loading.textContent =
+                    "Dades carregades.";
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                loading.textContent =
+                    "Error carregant les dades.";
+
+            }
+
+        }
+
+
+        /* =========================================================
+           DATA/HORA
+        ========================================================= */
+
+        function updateTimeLabel(
+            filename
+        ) {
+
+            /*
+             * Exemple:
+             *
+             * utci_2026-10-05T09-00-00.000000000.tif
+             */
+
+            const match =
+                filename.match(
+                    /utci_(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})/
+                );
+
+            if (!match) {
+
+                timeLabel.textContent =
+                    filename;
+
+                return;
+
+            }
+
+            const [
+
+                ,
+                year,
+                month,
+                day,
+                hour,
+                minute
+
+            ] = match;
+
+
+            const date =
+                new Date(
+                    Number(year),
+                    Number(month) - 1,
+                    Number(day),
+                    Number(hour),
+                    Number(minute)
+                );
+
+
+            timeLabel.textContent =
+                date.toLocaleString(
+                    "ca-ES",
+                    {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
+
+        }
+
+
+        /* =========================================================
+           SLIDER
+        ========================================================= */
+
+        slider.min = 0;
+
+        slider.max =
+            forecastFiles.length - 1;
+
+        slider.value = 0;
+
+
+        slider.addEventListener(
+            "input",
+            async () => {
+
+                await showRaster(
+                    Number(slider.value)
+                );
+
+            }
+        );
+
+
+        /* =========================================================
+           ANTERIOR
+        ========================================================= */
+
+        previousButton.addEventListener(
+            "click",
+            async () => {
+
+                let index =
+                    currentIndex - 1;
+
+                if (index < 0) {
+
+                    index =
+                        forecastFiles.length - 1;
+
+                }
+
+                await showRaster(index);
+
+            }
+        );
+
+
+        /* =========================================================
+           SEGÜENT
+        ========================================================= */
+
+        nextButton.addEventListener(
+            "click",
+            async () => {
+
+                let index =
+                    currentIndex + 1;
+
+                if (
+                    index >=
+                    forecastFiles.length
+                ) {
+
+                    index = 0;
+
+                }
+
+                await showRaster(index);
+
+            }
+        );
+
+
+        /* =========================================================
+           PLAY / PAUSE
+        ========================================================= */
+
+        playButton.addEventListener(
+            "click",
+            () => {
+
+                if (animationTimer) {
+
+                    clearInterval(
+                        animationTimer
+                    );
+
+                    animationTimer = null;
+
+                    playButton.textContent =
+                        "▶";
+
+                    return;
+
+                }
+
+
+                playButton.textContent =
+                    "⏸";
+
+
+                animationTimer =
+                    setInterval(
+                        async () => {
+
+                            let index =
+                                currentIndex + 1;
+
+                            if (
+                                index >=
+                                forecastFiles.length
+                            ) {
+
+                                index = 0;
+
+                            }
+
+                            await showRaster(index);
+
+                        },
+                        1000
+                    );
+
+            }
+        );
+
+
+        /* =========================================================
+           MODE VISUALITZACIÓ
+        ========================================================= */
+
+        modeSelect.addEventListener(
+            "change",
+            async () => {
+
+                currentMode =
+                    modeSelect.value;
+
+
+                if (
+                    currentMode === "stress"
+                ) {
+
+                    continuousLegend.style.display =
+                        "none";
+
+                } else {
+
+                    continuousLegend.style.display =
+                        "block";
+
+                }
+
+
+                /*
+                 * Reprocessar el raster actual.
+                 *
+                 * No cal tornar-lo a descarregar:
+                 * està al cache.
+                 */
+
+                await showRaster(
+                    currentIndex
+                );
+
+            }
+        );
+
+
+        /* =========================================================
+           MAPA
+        ========================================================= */
+
+        map =
+            new maplibregl.Map({
+
+                container: "map",
+
+                style:
+                    "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+
+                center: [
+                    1.7,
+                    41.8
+                ],
+
+                zoom: 7
+
+            });
 
 
         map.addControl(
@@ -524,814 +1212,15 @@
         );
 
 
-        // ============================================================
-        // COLORS UTCI CONTINU
-        // ============================================================
-
-        function utciColor(value) {
-
-            if (!Number.isFinite(value)) {
-
-                return [
-                    0,
-                    0,
-                    0,
-                    0
-                ];
-            }
-
-
-            const t =
-                Math.max(
-                    0,
-                    Math.min(
-                        1,
-                        (value + 40) / 80
-                    )
-                );
-
-
-            let r;
-            let g;
-            let b;
-
-
-            if (t < 0.25) {
-
-                const p =
-                    t / 0.25;
-
-                r =
-                    49 +
-                    (69 - 49) * p;
-
-                g =
-                    54 +
-                    (117 - 54) * p;
-
-                b =
-                    149 +
-                    (180 - 149) * p;
-
-            }
-
-            else if (t < 0.5) {
-
-                const p =
-                    (t - 0.25) / 0.25;
-
-                r =
-                    69 +
-                    (255 - 69) * p;
-
-                g =
-                    117 +
-                    (255 - 117) * p;
-
-                b =
-                    180 +
-                    (191 - 180) * p;
-
-            }
-
-            else if (t < 0.75) {
-
-                const p =
-                    (t - 0.5) / 0.25;
-
-                r =
-                    255 +
-                    (244 - 255) * p;
-
-                g =
-                    255 +
-                    (109 - 255) * p;
-
-                b =
-                    191 +
-                    (67 - 191) * p;
-
-            }
-
-            else {
-
-                const p =
-                    (t - 0.75) / 0.25;
-
-                r =
-                    244 +
-                    (165 - 244) * p;
-
-                g =
-                    109 +
-                    (0 - 109) * p;
-
-                b =
-                    67 +
-                    (38 - 67) * p;
-            }
-
-
-            return [
-
-                Math.round(r),
-
-                Math.round(g),
-
-                Math.round(b),
-
-                220
-            ];
-        }
-
-
-        // ============================================================
-        // COLORS CATEGORIES UTCI
-        // ============================================================
-
-        function stressColor(value) {
-
-            if (!Number.isFinite(value)) {
-
-                return [
-                    0,
-                    0,
-                    0,
-                    0
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // FRED EXTREM
-            // --------------------------------------------------------
-
-            if (value < -40) {
-
-                return [
-                    49,
-                    54,
-                    149,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // FRED MOLT FORT
-            // --------------------------------------------------------
-
-            if (value < -27) {
-
-                return [
-                    69,
-                    117,
-                    180,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // FRED FORT
-            // --------------------------------------------------------
-
-            if (value < -13) {
-
-                return [
-                    116,
-                    173,
-                    209,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // FRED MODERAT
-            // --------------------------------------------------------
-
-            if (value < 0) {
-
-                return [
-                    171,
-                    217,
-                    233,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // FRED LLEU
-            // --------------------------------------------------------
-
-            if (value < 9) {
-
-                return [
-                    217,
-                    239,
-                    139,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // SENSE ESTRÈS
-            // --------------------------------------------------------
-
-            if (value < 26) {
-
-                return [
-                    255,
-                    255,
-                    191,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // CALOR MODERADA
-            // --------------------------------------------------------
-
-            if (value < 32) {
-
-                return [
-                    254,
-                    224,
-                    139,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // CALOR FORTA
-            // --------------------------------------------------------
-
-            if (value < 38) {
-
-                return [
-                    253,
-                    174,
-                    97,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // CALOR MOLT FORTA
-            // --------------------------------------------------------
-
-            if (value < 46) {
-
-                return [
-                    215,
-                    48,
-                    39,
-                    220
-                ];
-            }
-
-
-            // --------------------------------------------------------
-            // CALOR EXTREMA
-            // --------------------------------------------------------
-
-            return [
-                165,
-                0,
-                38,
-                220
-            ];
-        }
-
-
-        // ============================================================
-        // GENERAR IMATGE
-        // ============================================================
-
-        function createImage(
-            raster,
-            width,
-            height
-        ) {
-
-            const pixels =
-                new Uint8ClampedArray(
-                    width *
-                    height *
-                    4
-                );
-
-
-            const colorFunction =
-                mode.value === "stress"
-                    ? stressColor
-                    : utciColor;
-
-
-            for (
-                let i = 0;
-                i < raster.length;
-                i++
-            ) {
-
-                const value =
-                    raster[i];
-
-
-                const [
-                    r,
-                    g,
-                    b,
-                    a
-                ] =
-                    colorFunction(value);
-
-
-                const offset =
-                    i * 4;
-
-
-                pixels[offset] =
-                    r;
-
-                pixels[offset + 1] =
-                    g;
-
-                pixels[offset + 2] =
-                    b;
-
-                pixels[offset + 3] =
-                    a;
-            }
-
-
-            const canvas =
-                document.createElement("canvas");
-
-
-            canvas.width =
-                width;
-
-            canvas.height =
-                height;
-
-
-            const context =
-                canvas.getContext("2d");
-
-
-            const imageData =
-                new ImageData(
-                    pixels,
-                    width,
-                    height
-                );
-
-
-            context.putImageData(
-                imageData,
-                0,
-                0
-            );
-
-
-            return canvas.toDataURL(
-                "image/png"
-            );
-        }
-
-
-        // ============================================================
-        // ACTUALITZAR LLEGENDA
-        // ============================================================
-
-        function updateLegend() {
-
-            if (mode.value === "stress") {
-
-                legendTitle.textContent =
-                    "Índex d'estrès tèrmic UTCI";
-
-                continuousLegend.style.display =
-                    "none";
-
-                categoryLegend.style.display =
-                    "block";
-
-            }
-
-            else {
-
-                legendTitle.textContent =
-                    "UTCI (°C)";
-
-                continuousLegend.style.display =
-                    "block";
-
-                categoryLegend.style.display =
-                    "none";
-            }
-        }
-
-
-        // ============================================================
-        // VARIABLES DEL RASTER
-        // ============================================================
-
-        let raster = null;
-
-        let rasterWidth = 0;
-
-        let rasterHeight = 0;
-
-
-        // ============================================================
-        // COORDENADES
-        // ============================================================
-
-        let topLeft = null;
-
-        let topRight = null;
-
-        let bottomRight = null;
-
-        let bottomLeft = null;
-
-
-        // ============================================================
-        // CREAR / ACTUALITZAR CAPA
-        // ============================================================
-
-        function updateRasterLayer() {
-
-            status.textContent =
-                "Actualitzant tematització...";
-
-
-            const imageUrl =
-                createImage(
-                    raster,
-                    rasterWidth,
-                    rasterHeight
-                );
-
-
-            /*
-             * Si la source ja existeix, l'actualitzem.
-             */
-
-            if (
-                map.getSource("utci")
-            ) {
-
-                map.getSource("utci")
-                    .updateImage({
-
-                        url: imageUrl,
-
-                        coordinates: [
-
-                            topLeft,
-
-                            topRight,
-
-                            bottomRight,
-
-                            bottomLeft
-                        ]
-
-                    });
-
-            }
-
-            else {
-
-                map.addSource(
-                    "utci",
-                    {
-
-                        type: "image",
-
-                        url: imageUrl,
-
-                        coordinates: [
-
-                            topLeft,
-
-                            topRight,
-
-                            bottomRight,
-
-                            bottomLeft
-                        ]
-
-                    }
-                );
-
-
-                map.addLayer({
-
-                    id: "utci",
-
-                    type: "raster",
-
-                    source: "utci",
-
-                    paint: {
-
-                        "raster-opacity":
-                            0.75,
-
-                        "raster-fade-duration":
-                            0
-
-                    }
-
-                });
-
-            }
-
-
-            updateLegend();
-
-
-            status.textContent =
-                mode.value === "stress"
-                    ? "UTCI · índex d'estrès tèrmic"
-                    : "UTCI · temperatura equivalent";
-        }
-
-
-        // ============================================================
-        // CARREGAR COG
-        // ============================================================
-
-        async function loadCOG() {
-
-            status.textContent =
-                "Obrint COG...";
-
-
-            const tiff =
-                await fromUrl(
-                    COG_URL
-                );
-
-
-            const image =
-                await tiff.getImage();
-
-
-            const width =
-                image.getWidth();
-
-
-            const height =
-                image.getHeight();
-
-
-            const bbox =
-                image.getBoundingBox();
-
-
-            const resolution =
-                image.getResolution();
-
-
-            console.log(
-                "COG:",
-                {
-
-                    width,
-
-                    height,
-
-                    bbox,
-
-                    resolution,
-
-                    samples:
-                        image.getSamplesPerPixel()
-
-                }
-            );
-
-
-            // ========================================================
-            // LLEGIR RASTER COMPLET
-            // ========================================================
-
-            status.textContent =
-                "Llegint raster complet...";
-
-
-            raster =
-                await image.readRasters({
-
-                    interleave: true
-
-                });
-
-
-            rasterWidth =
-                width;
-
-
-            rasterHeight =
-                height;
-
-
-            console.log(
-                "Raster complet llegit:",
-                rasterWidth,
-                "×",
-                rasterHeight
-            );
-
-
-            // ========================================================
-            // BBOX
-            // ========================================================
-
-            const minX =
-                bbox[0];
-
-            const minY =
-                bbox[1];
-
-            const maxX =
-                bbox[2];
-
-            const maxY =
-                bbox[3];
-
-
-            // ========================================================
-            // EPSG:25831 → EPSG:4326
-            // ========================================================
-
-            topLeft =
-                proj4(
-                    "EPSG:25831",
-                    "EPSG:4326",
-                    [
-                        minX,
-                        maxY
-                    ]
-                );
-
-
-            topRight =
-                proj4(
-                    "EPSG:25831",
-                    "EPSG:4326",
-                    [
-                        maxX,
-                        maxY
-                    ]
-                );
-
-
-            bottomRight =
-                proj4(
-                    "EPSG:25831",
-                    "EPSG:4326",
-                    [
-                        maxX,
-                        minY
-                    ]
-                );
-
-
-            bottomLeft =
-                proj4(
-                    "EPSG:25831",
-                    "EPSG:4326",
-                    [
-                        minX,
-                        minY
-                    ]
-                );
-
-
-            console.log(
-                "Top-left:",
-                topLeft
-            );
-
-            console.log(
-                "Top-right:",
-                topRight
-            );
-
-            console.log(
-                "Bottom-right:",
-                bottomRight
-            );
-
-            console.log(
-                "Bottom-left:",
-                bottomLeft
-            );
-
-
-            // ========================================================
-            // CREAR MAPA
-            // ========================================================
-
-            updateRasterLayer();
-
-
-            // ========================================================
-            // ZOOM
-            // ========================================================
-
-            map.fitBounds(
-
-                [
-                    [
-                        Math.min(
-                            topLeft[0],
-                            bottomLeft[0]
-                        ),
-
-                        Math.min(
-                            bottomLeft[1],
-                            bottomRight[1]
-                        )
-                    ],
-
-                    [
-                        Math.max(
-                            topRight[0],
-                            bottomRight[0]
-                        ),
-
-                        Math.max(
-                            topLeft[1],
-                            topRight[1]
-                        )
-                    ]
-                ],
-
-                {
-
-                    padding: 40,
-
-                    duration: 0
-
-                }
-            );
-        }
-
-
-        // ============================================================
-        // SELECTOR
-        // ============================================================
-
-        mode.addEventListener(
-            "change",
-            () => {
-
-                if (!raster) {
-                    return;
-                }
-
-                updateRasterLayer();
-            }
-        );
-
-
-        // ============================================================
-        // INICIALITZAR
-        // ============================================================
-
-        updateLegend();
-
+        /* =========================================================
+           INICIAR
+        ========================================================= */
 
         map.on(
             "load",
-            () => {
+            async () => {
 
-                loadCOG()
-                    .catch(
-                        error => {
-
-                            console.error(
-                                error
-                            );
-
-                            status.textContent =
-                                "Error carregant el COG: " +
-                                error.message;
-                        }
-                    );
+                await showRaster(0);
 
             }
         );
