@@ -1,132 +1,195 @@
 <!doctype html>
-<html lang="en">
+<html lang="ca">
 
 <head>
+
     <meta charset="utf-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Thermal Comfort — UTCI</title>
+    <title>Thermal Confort — UTCI</title>
+
 
     <style>
         html,
         body {
+
             margin: 0;
             padding: 0;
+
             width: 100%;
             height: 100%;
-            font-family: system-ui, sans-serif;
+
+            font-family:
+                system-ui,
+                sans-serif;
+
         }
+
 
         #map {
+
             width: 100%;
             height: 100%;
+
         }
 
+
         /* =========================================================
-           CONTROL PANEL
+           PANEL
            ========================================================= */
 
         #panel {
+
             position: absolute;
+
             top: 12px;
             left: 12px;
+
             z-index: 10;
 
             width: 330px;
-            max-width: calc(100vw - 40px);
+            max-width:
+                calc(100vw - 40px);
 
             background: white;
 
-            padding: 14px 16px;
+            padding:
+                14px 16px;
 
             border-radius: 8px;
 
             box-shadow:
                 0 2px 10px rgb(0 0 0 / 25%);
+
         }
+
 
         #panel strong {
+
             display: block;
+
             margin-bottom: 8px;
+
             font-size: 17px;
+
         }
+
 
         .control {
+
             margin-top: 12px;
+
         }
 
+
         .control label {
+
             display: block;
+
             margin-bottom: 5px;
 
             font-size: 12px;
             font-weight: 600;
+
         }
 
+
         select {
+
             width: 100%;
+
             box-sizing: border-box;
 
             padding: 7px;
 
-            border: 1px solid #ccc;
+            border:
+                1px solid #ccc;
+
             border-radius: 5px;
 
             background: white;
+
         }
+
 
         input[type="range"] {
+
             width: 100%;
+
             box-sizing: border-box;
+
         }
 
+
         #timeLabel {
+
             margin-top: 5px;
 
             text-align: center;
 
             font-size: 13px;
             font-weight: 600;
+
         }
+
 
         .buttons {
+
             display: flex;
+
             gap: 6px;
+
             margin-top: 8px;
+
         }
 
+
         button {
+
             flex: 1;
 
-            padding: 7px 8px;
+            padding:
+                7px 8px;
 
-            border: 1px solid #bbb;
+            border:
+                1px solid #bbb;
+
             border-radius: 5px;
 
             background: #f7f7f7;
 
             cursor: pointer;
+
         }
+
 
         button:hover {
+
             background: #eaeaea;
+
         }
 
+
         #status {
+
             margin-top: 10px;
 
             font-size: 12px;
+
             color: #555;
 
             line-height: 1.4;
+
         }
 
 
         /* =========================================================
-           LEGEND
+           LLEGENDA
            ========================================================= */
 
         #legend {
+
             position: absolute;
 
             bottom: 24px;
@@ -144,17 +207,25 @@
 
             box-shadow:
                 0 2px 10px rgb(0 0 0 / 25%);
+
         }
+
 
         #legendTitle {
+
             font-weight: 700;
+
             margin-bottom: 7px;
+
         }
 
+
         #gradient {
+
             height: 16px;
 
-            margin: 8px 0 4px;
+            margin:
+                8px 0 4px;
 
             background:
                 linear-gradient(to right,
@@ -168,21 +239,33 @@
                     #f46d43,
                     #d73027,
                     #a50026);
+
         }
+
 
         .legend-labels {
+
             display: flex;
-            justify-content: space-between;
+
+            justify-content:
+                space-between;
 
             font-size: 11px;
+
         }
+
 
         #stressLegend {
+
             display: none;
+
         }
 
+
         .stress-item {
+
             display: flex;
+
             align-items: center;
 
             gap: 7px;
@@ -190,214 +273,36 @@
             margin: 4px 0;
 
             font-size: 11px;
+
         }
 
+
         .stress-color {
+
             width: 18px;
             height: 13px;
 
-            flex: 0 0 18px;
+            flex:
+                0 0 18px;
 
             border-radius: 2px;
+
         }
 
-
-        /* =========================================================
-           MOBILE
-           ========================================================= */
 
         @media (max-width: 600px) {
 
-            /*
-             * Keep the map as the dominant element.
-             */
-
             #panel {
-                top: 10px;
-                left: 10px;
 
-                width: calc(100vw - 20px);
-                max-width: none;
+                width: 280px;
 
-                box-sizing: border-box;
-
-                padding: 10px 12px;
-
-                border-radius: 8px;
             }
 
-
-            #panel strong {
-                margin-bottom: 6px;
-
-                font-size: 15px;
-            }
-
-
-            /*
-             * Keep the visualization selector compact.
-             */
-
-            .control {
-                margin-top: 7px;
-            }
-
-            .control label {
-                margin-bottom: 3px;
-
-                font-size: 11px;
-            }
-
-            select {
-                padding: 6px;
-
-                font-size: 13px;
-            }
-
-
-            /*
-             * Compact timeline:
-             * hide the large "Forecast" label and the
-             * textual date below the slider.
-             */
-
-            .timeline-control {
-                margin-top: 8px;
-            }
-
-            .timeline-control>label {
-                display: none;
-            }
-
-            #timeSlider {
-                display: block;
-
-                height: 18px;
-
-                margin: 0;
-            }
-
-            #timeLabel {
-                margin-top: 2px;
-
-                font-size: 11px;
-            }
-
-
-            /*
-             * Keep playback controls compact.
-             */
-
-            .buttons {
-                gap: 5px;
-
-                margin-top: 5px;
-            }
-
-            button {
-                padding: 5px 7px;
-
-                font-size: 12px;
-            }
-
-
-            /*
-             * Status becomes smaller and less dominant.
-             */
-
-            #status {
-                margin-top: 5px;
-
-                font-size: 10px;
-
-                line-height: 1.25;
-            }
-
-
-            /*
-             * Compact legend positioned above the
-             * bottom-right map controls.
-             */
 
             #legend {
-                right: 10px;
-                bottom: 10px;
 
-                width: 190px;
+                width: 210px;
 
-                box-sizing: border-box;
-
-                padding: 8px 10px;
-
-                border-radius: 7px;
-            }
-
-            #legendTitle {
-                margin-bottom: 4px;
-
-                font-size: 12px;
-            }
-
-            #gradient {
-                height: 12px;
-
-                margin: 5px 0 3px;
-            }
-
-            .legend-labels {
-                font-size: 9px;
-            }
-
-            .stress-item {
-                gap: 5px;
-
-                margin: 2px 0;
-
-                font-size: 9px;
-            }
-
-            .stress-color {
-                width: 14px;
-                height: 10px;
-
-                flex: 0 0 14px;
-            }
-
-        }
-
-
-        /* =========================================================
-           VERY SMALL SCREENS
-           ========================================================= */
-
-        @media (max-width: 380px) {
-
-            #panel {
-                padding: 8px 10px;
-            }
-
-            #panel strong {
-                font-size: 14px;
-            }
-
-            select {
-                font-size: 12px;
-            }
-
-            .buttons button {
-                padding: 4px 5px;
-
-                font-size: 11px;
-            }
-
-            #status {
-                font-size: 9px;
-            }
-
-            #legend {
-                width: 170px;
-
-                padding: 7px 8px;
             }
 
         }
@@ -408,24 +313,25 @@
 
 <body>
 
+
     <div id="map"></div>
 
 
     <!-- =========================================================
-         CONTROL PANEL
+         PANEL
          ========================================================= -->
 
     <div id="panel">
 
         <strong>
-            Thermal Comfort
+            Thermal Confort
         </strong>
 
 
         <div class="control">
 
             <label for="modeSelect">
-                Visualization
+                Visualització
             </label>
 
             <select id="modeSelect">
@@ -435,7 +341,7 @@
                 </option>
 
                 <option value="stress">
-                    Thermal stress
+                    Estrès tèrmic
                 </option>
 
             </select>
@@ -443,10 +349,10 @@
         </div>
 
 
-        <div class="control timeline-control">
+        <div class="control">
 
             <label for="timeSlider">
-                Forecast
+                Previsió
             </label>
 
             <input id="timeSlider" type="range" min="0" max="29" step="1" value="0">
@@ -460,7 +366,7 @@
 
         <div class="buttons">
 
-            <button id="previousButton" type="button" aria-label="Previous forecast" title="Previous forecast">
+            <button id="previousButton" type="button">
                 ◀
             </button>
 
@@ -470,7 +376,7 @@
             </button>
 
 
-            <button id="nextButton" type="button" aria-label="Next forecast" title="Next forecast">
+            <button id="nextButton" type="button">
                 ▶
             </button>
 
@@ -478,14 +384,14 @@
 
 
         <div id="status">
-            Preparing...
+            Preparant...
         </div>
 
     </div>
 
 
     <!-- =========================================================
-         LEGEND
+         LLEGENDA
          ========================================================= -->
 
     <div id="legend">
@@ -498,6 +404,7 @@
         <div id="continuousLegend">
 
             <div id="gradient"></div>
+
 
             <div class="legend-labels">
 
@@ -514,65 +421,96 @@
 
         <div id="stressLegend">
 
-            <div class="stress-item">
-                <span class="stress-color" style="background:#313695">
-                </span>
-                &lt; Extreme cold stress
-            </div>
 
             <div class="stress-item">
-                <span class="stress-color" style="background:#4575b4">
-                </span>
-                Very strong cold stress
+
+                <span class="stress-color" style="background:#313695"></span>
+
+                Fred extrem
+
             </div>
 
-            <div class="stress-item">
-                <span class="stress-color" style="background:#74add1">
-                </span>
-                Strong cold stress
-            </div>
 
             <div class="stress-item">
-                <span class="stress-color" style="background:#abd9e9">
-                </span>
-                Moderate cold stress
+
+                <span class="stress-color" style="background:#4575b4"></span>
+
+                Fred molt fort
+
             </div>
 
-            <div class="stress-item">
-                <span class="stress-color" style="background:#d9f0f3">
-                </span>
-                Slight cold stress
-            </div>
 
             <div class="stress-item">
-                <span class="stress-color" style="background:#ffffbf">
-                </span>
-                No thermal stress
+
+                <span class="stress-color" style="background:#74add1"></span>
+
+                Fred fort
+
             </div>
 
-            <div class="stress-item">
-                <span class="stress-color" style="background:#fee08b">
-                </span>
-                Moderate heat stress
-            </div>
 
             <div class="stress-item">
-                <span class="stress-color" style="background:#fdae61">
-                </span>
-                Strong heat stress
+
+                <span class="stress-color" style="background:#abd9e9"></span>
+
+                Fred moderat
+
             </div>
 
-            <div class="stress-item">
-                <span class="stress-color" style="background:#f46d43">
-                </span>
-                Very strong heat stress
-            </div>
 
             <div class="stress-item">
-                <span class="stress-color" style="background:#a50026">
-                </span>
-                Extreme heat stress
+
+                <span class="stress-color" style="background:#d9f0f3"></span>
+
+                Fred lleu
+
             </div>
+
+
+            <div class="stress-item">
+
+                <span class="stress-color" style="background:#ffffbf"></span>
+
+                Sense estrès
+
+            </div>
+
+
+            <div class="stress-item">
+
+                <span class="stress-color" style="background:#fee08b"></span>
+
+                Calor moderada
+
+            </div>
+
+
+            <div class="stress-item">
+
+                <span class="stress-color" style="background:#fdae61"></span>
+
+                Calor forta
+
+            </div>
+
+
+            <div class="stress-item">
+
+                <span class="stress-color" style="background:#f46d43"></span>
+
+                Calor molt forta
+
+            </div>
+
+
+            <div class="stress-item">
+
+                <span class="stress-color" style="background:#a50026"></span>
+
+                Calor extrema
+
+            </div>
+
 
         </div>
 
@@ -585,11 +523,14 @@
 
     <script type="module">
 
+
         import maplibregl from
             "https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/+esm";
 
+
         import { fromUrl } from
             "https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm";
+
 
         import proj4 from
             "https://cdn.jsdelivr.net/npm/proj4@2.19.10/+esm";
@@ -600,8 +541,15 @@
         // =========================================================
 
         proj4.defs(
+
             "EPSG:25831",
-            "+proj=utm +zone=31 +ellps=GRS80 +units=m +no_defs"
+
+            "+proj=utm " +
+            "+zone=31 " +
+            "+ellps=GRS80 " +
+            "+units=m " +
+            "+no_defs"
+
         );
 
 
@@ -610,47 +558,78 @@
         // =========================================================
 
         const status =
-            document.getElementById("status");
+            document.getElementById(
+                "status"
+            );
+
 
         const modeSelect =
-            document.getElementById("modeSelect");
+            document.getElementById(
+                "modeSelect"
+            );
+
 
         const timeSlider =
-            document.getElementById("timeSlider");
+            document.getElementById(
+                "timeSlider"
+            );
+
 
         const timeLabel =
-            document.getElementById("timeLabel");
+            document.getElementById(
+                "timeLabel"
+            );
+
 
         const previousButton =
-            document.getElementById("previousButton");
+            document.getElementById(
+                "previousButton"
+            );
+
 
         const playButton =
-            document.getElementById("playButton");
+            document.getElementById(
+                "playButton"
+            );
+
 
         const nextButton =
-            document.getElementById("nextButton");
+            document.getElementById(
+                "nextButton"
+            );
+
 
         const legendTitle =
-            document.getElementById("legendTitle");
+            document.getElementById(
+                "legendTitle"
+            );
+
 
         const continuousLegend =
-            document.getElementById("continuousLegend");
+            document.getElementById(
+                "continuousLegend"
+            );
+
 
         const stressLegend =
-            document.getElementById("stressLegend");
+            document.getElementById(
+                "stressLegend"
+            );
 
 
         // =========================================================
-        // FORECAST FILES
+        // FITXERS
         // =========================================================
 
         const forecastFiles = [
+
 
             "utci_2026-10-05T09-00-00.000000000.tif",
             "utci_2026-10-05T12-00-00.000000000.tif",
             "utci_2026-10-05T15-00-00.000000000.tif",
             "utci_2026-10-05T18-00-00.000000000.tif",
             "utci_2026-10-05T21-00-00.000000000.tif",
+
 
             "utci_2026-10-06T00-00-00.000000000.tif",
             "utci_2026-10-06T03-00-00.000000000.tif",
@@ -661,6 +640,7 @@
             "utci_2026-10-06T18-00-00.000000000.tif",
             "utci_2026-10-06T21-00-00.000000000.tif",
 
+
             "utci_2026-10-07T00-00-00.000000000.tif",
             "utci_2026-10-07T03-00-00.000000000.tif",
             "utci_2026-10-07T06-00-00.000000000.tif",
@@ -669,6 +649,7 @@
             "utci_2026-10-07T15-00-00.000000000.tif",
             "utci_2026-10-07T18-00-00.000000000.tif",
             "utci_2026-10-07T21-00-00.000000000.tif",
+
 
             "utci_2026-10-08T00-00-00.000000000.tif",
             "utci_2026-10-08T03-00-00.000000000.tif",
@@ -683,7 +664,7 @@
 
 
         // =========================================================
-        // STATE
+        // ESTAT
         // =========================================================
 
         let currentIndex = 0;
@@ -710,67 +691,271 @@
 
 
         // =========================================================
-        // PERSISTENT CANVAS
+        // CANVAS PERSISTENT
         // =========================================================
 
-        /*
-         * This is THE canvas used by MapLibre.
-         *
-         * A new canvas is not created for every TIF.
-         */
-
         const canvas =
-            document.createElement("canvas");
+            document.createElement(
+                "canvas"
+            );
+
 
         canvas.width = 2690;
+
         canvas.height = 2620;
+
 
         const context =
             canvas.getContext("2d");
 
 
         // =========================================================
-        // MAP
+        // MAPA
         // =========================================================
 
-        const map = new maplibregl.Map({
+        const map =
+            new maplibregl.Map({
 
-            container: "map",
+                container: "map",
 
-            style:
-                "https://geoserveis.icgc.cat/contextmaps/icgc_mapa_base_fosc.json",
+                style:
+                    "https://geoserveis.icgc.cat/contextmaps/icgc_mapa_base_fosc.json",
 
-            center: [1.7, 41.7],
-            zoom: 7
+                center:
+                    [1.7, 41.7],
 
-        });
+                zoom: 7,
+
+                maxPitch: 85
+
+            });
+
 
         map.addControl(
+
             new maplibregl.NavigationControl(),
+
             "top-right"
+
         );
 
 
         // =========================================================
-        // CONTINUOUS UTCI PALETTE
+        // DEM / TERRAIN
+        // =========================================================
+
+        /*
+         * DEM global de Mapterhorn.
+         *
+         * MapLibre utilitza aquest tipus de raster-dem
+         * tant per al terreny 3D com per al hillshade.
+         *
+         * Fem servir dues fonts separades perquè MapLibre
+         * recomana separar els consumidors del DEM.
+         */
+
+        const TERRAIN_URL =
+            "https://tiles.mapterhorn.com/tilejson.json";
+
+
+        function addTerrain() {
+
+
+            if (
+                map.getSource("terrainSource")
+            ) {
+
+                return;
+
+            }
+
+
+            map.addSource(
+
+                "terrainSource",
+
+                {
+
+                    type: "raster-dem",
+
+                    url: TERRAIN_URL,
+
+                    tileSize: 256
+
+                }
+
+            );
+
+
+            map.addSource(
+
+                "hillshadeSource",
+
+                {
+
+                    type: "raster-dem",
+
+                    url: TERRAIN_URL,
+
+                    tileSize: 256
+
+                }
+
+            );
+
+
+            /*
+             * Terrain 3D.
+             *
+             * Exageració 1 = relleu real.
+             */
+
+            map.setTerrain({
+
+                source:
+                    "terrainSource",
+
+                exaggeration: 1
+
+            });
+
+
+            /*
+             * Hillshade.
+             *
+             * Es col·locarà sota el raster UTCI
+             * però per sobre del basemap.
+             */
+
+            map.addLayer(
+
+                {
+
+                    id:
+                        "terrain-hillshade",
+
+                    type:
+                        "hillshade",
+
+                    source:
+                        "hillshadeSource",
+
+                    layout:
+                    {
+
+                        visibility:
+                            "visible"
+
+                    },
+
+                    paint:
+                    {
+
+                        "hillshade-exaggeration":
+                            0.35,
+
+                        "hillshade-illumination-direction":
+                            315,
+
+                        "hillshade-illumination-altitude":
+                            45
+
+                    }
+
+                },
+
+                getFirstTextLayerId()
+
+            );
+
+        }
+
+
+        // =========================================================
+        // TROBAR PRIMERA CAPA DE TEXT
+        // =========================================================
+
+        /*
+         * Les capes d'un style MapLibre estan ordenades
+         * de baix a dalt.
+         *
+         * La primera capa de text és, per tant,
+         * la capa de text més baixa del mapa.
+         *
+         * Inserint-hi el UTCI just abans:
+         *
+         *      basemap
+         *      hillshade
+         *      UTCI
+         *      text / etiquetes
+         *
+         * Això evita que les etiquetes quedin tapades.
+         */
+
+        function getFirstTextLayerId() {
+
+            const layers =
+                map.getStyle().layers || [];
+
+
+            const textLayer =
+                layers.find(
+
+                    layer =>
+
+                        layer.type === "symbol" &&
+
+                        layer.layout &&
+
+                        layer.layout[
+                        "text-field"
+                        ]
+
+                );
+
+
+            return textLayer
+                ? textLayer.id
+                : undefined;
+
+        }
+
+
+        // =========================================================
+        // PALETA UTCI CONTÍNUA
         // =========================================================
 
         function utciColor(value) {
 
-            if (!Number.isFinite(value)) {
 
-                return [0, 0, 0, 0];
+            if (
+                !Number.isFinite(value)
+            ) {
+
+                return [
+                    0,
+                    0,
+                    0,
+                    0
+                ];
 
             }
 
 
             const t =
+
                 Math.max(
+
                     0,
+
                     Math.min(
+
                         1,
+
                         (value + 40) / 80
+
                     )
+
                 );
 
 
@@ -781,44 +966,99 @@
 
             if (t < 0.25) {
 
-                const p = t / 0.25;
 
-                r = 49 + (69 - 49) * p;
-                g = 54 + (117 - 54) * p;
-                b = 149 + (180 - 149) * p;
+                const p =
+                    t / 0.25;
+
+
+                r =
+                    49 +
+                    (69 - 49) * p;
+
+
+                g =
+                    54 +
+                    (117 - 54) * p;
+
+
+                b =
+                    149 +
+                    (180 - 149) * p;
+
 
             }
 
+
             else if (t < 0.5) {
+
 
                 const p =
                     (t - 0.25) / 0.25;
 
-                r = 69 + (255 - 69) * p;
-                g = 117 + (255 - 117) * p;
-                b = 180 + (191 - 180) * p;
+
+                r =
+                    69 +
+                    (255 - 69) * p;
+
+
+                g =
+                    117 +
+                    (255 - 117) * p;
+
+
+                b =
+                    180 +
+                    (191 - 180) * p;
+
 
             }
 
+
             else if (t < 0.75) {
+
 
                 const p =
                     (t - 0.5) / 0.25;
 
-                r = 255 + (244 - 255) * p;
-                g = 255 + (109 - 255) * p;
-                b = 191 + (67 - 191) * p;
+
+                r =
+                    255 +
+                    (244 - 255) * p;
+
+
+                g =
+                    255 +
+                    (109 - 255) * p;
+
+
+                b =
+                    191 +
+                    (67 - 191) * p;
+
 
             }
 
+
             else {
+
 
                 const p =
                     (t - 0.75) / 0.25;
 
-                r = 244 + (165 - 244) * p;
-                g = 109 + (0 - 109) * p;
-                b = 67 + (38 - 67) * p;
+
+                r =
+                    244 +
+                    (165 - 244) * p;
+
+
+                g =
+                    109 +
+                    (0 - 109) * p;
+
+
+                b =
+                    67 +
+                    (38 - 67) * p;
 
             }
 
@@ -826,8 +1066,11 @@
             return [
 
                 Math.round(r),
+
                 Math.round(g),
+
                 Math.round(b),
+
                 220
 
             ];
@@ -836,61 +1079,141 @@
 
 
         // =========================================================
-        // THERMAL STRESS PALETTE
+        // PALETA ESTRÈS
         // =========================================================
 
         function stressColor(value) {
 
-            if (!Number.isFinite(value)) {
 
-                return [0, 0, 0, 0];
+            if (
+                !Number.isFinite(value)
+            ) {
+
+                return [
+                    0,
+                    0,
+                    0,
+                    0
+                ];
 
             }
 
 
             if (value < -40)
-                return [49, 54, 149, 220];
+
+                return [
+                    49,
+                    54,
+                    149,
+                    220
+                ];
+
 
             if (value < -27)
-                return [69, 117, 180, 220];
+
+                return [
+                    69,
+                    117,
+                    180,
+                    220
+                ];
+
 
             if (value < -13)
-                return [116, 173, 209, 220];
+
+                return [
+                    116,
+                    173,
+                    209,
+                    220
+                ];
+
 
             if (value < 0)
-                return [171, 217, 233, 220];
+
+                return [
+                    171,
+                    217,
+                    233,
+                    220
+                ];
+
 
             if (value < 9)
-                return [217, 240, 243, 220];
+
+                return [
+                    217,
+                    240,
+                    243,
+                    220
+                ];
+
 
             if (value < 26)
-                return [255, 255, 191, 220];
+
+                return [
+                    255,
+                    255,
+                    191,
+                    220
+                ];
+
 
             if (value < 32)
-                return [254, 224, 139, 220];
+
+                return [
+                    254,
+                    224,
+                    139,
+                    220
+                ];
+
 
             if (value < 38)
-                return [253, 174, 97, 220];
+
+                return [
+                    253,
+                    174,
+                    97,
+                    220
+                ];
+
 
             if (value < 46)
-                return [244, 109, 67, 220];
 
-            return [165, 0, 38, 220];
+                return [
+                    244,
+                    109,
+                    67,
+                    220
+                ];
+
+
+            return [
+                165,
+                0,
+                38,
+                220
+            ];
 
         }
 
 
         // =========================================================
-        // CURRENT COLOR
+        // COLOR ACTUAL
         // =========================================================
 
         function getColor(value) {
 
-            if (currentMode === "stress") {
+
+            if (
+                currentMode === "stress"
+            ) {
 
                 return stressColor(value);
 
             }
+
 
             return utciColor(value);
 
@@ -898,22 +1221,28 @@
 
 
         // =========================================================
-        // LOAD COG
+        // CARREGAR COG
         // =========================================================
 
         async function loadRaster(filename) {
+
 
             const url =
                 `./data/${filename}`;
 
 
             status.textContent =
-                `Loading ${formatFilename(filename)}...`;
+
+                `Carregant ` +
+                `${formatFilename(filename)}...`;
 
 
             console.log(
-                "Loading COG:",
+
+                "Carregant COG:",
+
                 url
+
             );
 
 
@@ -928,32 +1257,46 @@
             const width =
                 image.getWidth();
 
+
             const height =
                 image.getHeight();
+
 
             const bbox =
                 image.getBoundingBox();
 
 
             console.log(
+
                 "COG:",
+
                 {
+
                     filename,
+
                     width,
+
                     height,
+
                     bbox,
+
                     resolution:
                         image.getResolution(),
+
                     samples:
                         image.getSamplesPerPixel()
+
                 }
+
             );
 
 
             const raster =
+
                 await image.readRasters({
 
-                    interleave: true
+                    interleave:
+                        true
 
                 });
 
@@ -961,45 +1304,80 @@
             const minX =
                 bbox[0];
 
+
             const minY =
                 bbox[1];
 
+
             const maxX =
                 bbox[2];
+
 
             const maxY =
                 bbox[3];
 
 
             const topLeft =
+
                 proj4(
+
                     "EPSG:25831",
+
                     "EPSG:4326",
-                    [minX, maxY]
+
+                    [
+                        minX,
+                        maxY
+                    ]
+
                 );
 
 
             const topRight =
+
                 proj4(
+
                     "EPSG:25831",
+
                     "EPSG:4326",
-                    [maxX, maxY]
+
+                    [
+                        maxX,
+                        maxY
+                    ]
+
                 );
 
 
             const bottomRight =
+
                 proj4(
+
                     "EPSG:25831",
+
                     "EPSG:4326",
-                    [maxX, minY]
+
+                    [
+                        maxX,
+                        minY
+                    ]
+
                 );
 
 
             const bottomLeft =
+
                 proj4(
+
                     "EPSG:25831",
+
                     "EPSG:4326",
-                    [minX, minY]
+
+                    [
+                        minX,
+                        minY
+                    ]
+
                 );
 
 
@@ -1014,17 +1392,26 @@
                 coordinates: [
 
                     topLeft,
+
                     topRight,
+
                     bottomRight,
+
                     bottomLeft
 
                 ],
 
                 bounds: [
 
-                    [bottomLeft[0], bottomLeft[1]],
+                    [
+                        bottomLeft[0],
+                        bottomLeft[1]
+                    ],
 
-                    [topRight[0], topRight[1]]
+                    [
+                        topRight[0],
+                        topRight[1]
+                    ]
 
                 ]
 
@@ -1034,10 +1421,11 @@
 
 
         // =========================================================
-        // PAINT RASTER TO CANVAS
+        // PINTAR RASTER AL CANVAS
         // =========================================================
 
         function paintRaster() {
+
 
             if (!currentRaster) {
 
@@ -1046,14 +1434,14 @@
             }
 
 
-            /*
-             * The canvas keeps exactly the same size
-             * as the raster.
-             */
-
             if (
-                canvas.width !== rasterWidth ||
-                canvas.height !== rasterHeight
+
+                canvas.width !==
+                rasterWidth ||
+
+                canvas.height !==
+                rasterHeight
+
             ) {
 
                 canvas.width =
@@ -1066,18 +1454,26 @@
 
 
             const pixels =
+
                 new Uint8ClampedArray(
+
                     rasterWidth *
                     rasterHeight *
                     4
+
                 );
 
 
             for (
+
                 let i = 0;
+
                 i < currentRaster.length;
+
                 i++
+
             ) {
+
 
                 const value =
                     currentRaster[i];
@@ -1094,11 +1490,14 @@
                 pixels[offset] =
                     color[0];
 
+
                 pixels[offset + 1] =
                     color[1];
 
+
                 pixels[offset + 2] =
                     color[2];
+
 
                 pixels[offset + 3] =
                     color[3];
@@ -1107,47 +1506,30 @@
 
 
             const imageData =
+
                 new ImageData(
+
                     pixels,
+
                     rasterWidth,
+
                     rasterHeight
+
                 );
 
 
             context.putImageData(
+
                 imageData,
+
                 0,
+
                 0
+
             );
 
 
-            /*
-             * CanvasSource with animate=true detects
-             * the new canvas contents.
-             */
-
             map.triggerRepaint();
-
-        }
-
-
-        // =========================================================
-        // RASTER POSITION
-        // =========================================================
-
-        function getFirstSymbolLayerId() {
-
-            const layers =
-                map.getStyle().layers || [];
-
-            const symbolLayer =
-                layers.find(
-                    layer => layer.type === "symbol"
-                );
-
-            return symbolLayer
-                ? symbolLayer.id
-                : undefined;
 
         }
 
@@ -1158,13 +1540,18 @@
 
         async function showRaster(index) {
 
+
             const thisRequest =
                 ++requestId;
 
 
             if (
+
                 index < 0 ||
-                index >= forecastFiles.length
+
+                index >=
+                forecastFiles.length
+
             ) {
 
                 return;
@@ -1189,26 +1576,26 @@
 
             try {
 
-                /*
-                 * If this is a different TIF,
-                 * load it.
-                 */
 
                 if (
-                    currentRasterFilename !== filename
+
+                    currentRasterFilename !==
+                    filename
+
                 ) {
 
+
                     const data =
-                        await loadRaster(filename);
+                        await loadRaster(
+                            filename
+                        );
 
-
-                    /*
-                     * If the user moved the slider
-                     * while loading, ignore this result.
-                     */
 
                     if (
-                        thisRequest !== requestId
+
+                        thisRequest !==
+                        requestId
+
                     ) {
 
                         return;
@@ -1219,17 +1606,22 @@
                     currentRaster =
                         data.raster;
 
+
                     rasterWidth =
                         data.width;
+
 
                     rasterHeight =
                         data.height;
 
+
                     rasterCoordinates =
                         data.coordinates;
 
+
                     rasterBounds =
                         data.bounds;
+
 
                     currentRasterFilename =
                         filename;
@@ -1238,91 +1630,118 @@
 
 
                 status.textContent =
-                    `Rendering ${formatFilename(filename)}...`;
 
+                    `Renderitzant ` +
+                    `${formatFilename(filename)}...`;
 
-                /*
-                 * Paint the Float32Array to the canvas.
-                 */
 
                 paintRaster();
 
 
-                /*
-                 * If this is the first time,
-                 * create the CanvasSource.
-                 */
+                // =================================================
+                // CREAR CANVAS SOURCE
+                // =================================================
 
                 if (
+
                     !map.getSource("utci")
+
                 ) {
 
+
                     map.addSource(
+
                         "utci",
+
                         {
 
-                            type: "canvas",
+                            type:
+                                "canvas",
 
-                            canvas: canvas,
+                            canvas:
+                                canvas,
 
-                            animate: true,
+                            animate:
+                                true,
 
                             coordinates:
                                 rasterCoordinates
 
                         }
+
                     );
 
 
-                    map.addLayer({
-
-                        id: "utci",
-
-                        type: "raster",
-
-                        source: "utci",
-
-                        paint: {
-
-                            "raster-opacity": 0.95,
-
-                            "raster-fade-duration": 0
-
-                        }
-
-                    }, getFirstSymbolLayerId());
-
-
                     /*
-                     * Initial zoom to Catalonia.
+                     * Important:
+                     *
+                     * El UTCI s'insereix just abans de la
+                     * primera capa de text del mapa.
                      */
 
-                    map.fitBounds(
-                        rasterBounds,
+                    map.addLayer(
+
                         {
 
-                            padding: 40,
+                            id:
+                                "utci",
 
-                            duration: 0
+                            type:
+                                "raster",
+
+                            source:
+                                "utci",
+
+                            paint:
+                            {
+
+                                "raster-opacity":
+                                    0.95,
+
+                                "raster-fade-duration":
+                                    0
+
+                            }
+
+                        },
+
+                        getFirstTextLayerId()
+
+                    );
+
+
+                    map.fitBounds(
+
+                        rasterBounds,
+
+                        {
+
+                            padding:
+                                40,
+
+                            duration:
+                                0
 
                         }
+
                     );
 
                 }
 
+
                 else {
 
-                    /*
-                     * The canvas is the same.
-                     * Only update its coordinates.
-                     */
 
                     const source =
-                        map.getSource("utci");
+                        map.getSource(
+                            "utci"
+                        );
 
 
                     source.setCoordinates(
+
                         rasterCoordinates
+
                     );
 
 
@@ -1332,20 +1751,30 @@
 
 
                 status.textContent =
-                    `${formatFilename(filename)} · ` +
-                    `${rasterWidth} × ${rasterHeight}`;
+
+                    `${formatFilename(filename)}` +
+                    ` · ` +
+                    `${rasterWidth} × ` +
+                    `${rasterHeight}`;
+
 
             }
 
+
             catch (error) {
 
+
                 console.error(
-                    "Error displaying raster:",
+
+                    "Error mostrant raster:",
+
                     error
+
                 );
 
 
                 status.textContent =
+
                     "Error: " +
                     error.message;
 
@@ -1355,14 +1784,18 @@
 
 
         // =========================================================
-        // FORMAT FILENAME
+        // FORMAT FITXER
         // =========================================================
 
         function formatFilename(filename) {
 
+
             const match =
+
                 filename.match(
+
                     /utci_(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})/
+
                 );
 
 
@@ -1384,49 +1817,71 @@
 
 
         // =========================================================
-        // UPDATE DATE
+        // ACTUALITZAR DATA
         // =========================================================
 
         function updateTimeLabel() {
 
+
             timeLabel.textContent =
+
                 formatFilename(
-                    forecastFiles[currentIndex]
+
+                    forecastFiles[
+                    currentIndex
+                    ]
+
                 );
 
         }
 
 
         // =========================================================
-        // LEGEND
+        // LLEGENDA
         // =========================================================
 
         function updateLegend() {
 
+
             if (
+
                 currentMode === "stress"
+
             ) {
 
+
                 legendTitle.textContent =
-                    "Thermal stress";
+
+                    "Estrès tèrmic";
+
 
                 continuousLegend.style.display =
+
                     "none";
 
+
                 stressLegend.style.display =
+
                     "block";
 
             }
 
+
             else {
 
+
                 legendTitle.textContent =
+
                     "UTCI (°C)";
 
+
                 continuousLegend.style.display =
+
                     "block";
 
+
                 stressLegend.style.display =
+
                     "none";
 
             }
@@ -1435,12 +1890,15 @@
 
 
         // =========================================================
-        // MODE CHANGE
+        // CANVI DE MODE
         // =========================================================
 
         modeSelect.addEventListener(
+
             "change",
+
             async () => {
+
 
                 currentMode =
                     modeSelect.value;
@@ -1449,18 +1907,13 @@
                 updateLegend();
 
 
-                /*
-                 * Do not download the TIF again.
-                 *
-                 * Simply repaint it using the
-                 * selected color scale.
-                 */
-
                 paintRaster();
+
 
                 map.triggerRepaint();
 
             }
+
         );
 
 
@@ -1469,57 +1922,77 @@
         // =========================================================
 
         timeSlider.addEventListener(
+
             "input",
+
             () => {
 
+
                 const index =
-                    Number(timeSlider.value);
+                    Number(
+                        timeSlider.value
+                    );
 
 
                 showRaster(index);
 
             }
+
         );
 
 
         // =========================================================
-        // PREVIOUS
+        // ANTERIOR
         // =========================================================
 
         previousButton.addEventListener(
+
             "click",
+
             () => {
 
+
                 const index =
+
                     currentIndex > 0
+
                         ? currentIndex - 1
+
                         : forecastFiles.length - 1;
 
 
                 showRaster(index);
 
             }
+
         );
 
 
         // =========================================================
-        // NEXT
+        // SEGÜENT
         // =========================================================
 
         nextButton.addEventListener(
+
             "click",
+
             () => {
 
+
                 const index =
+
                     currentIndex <
                         forecastFiles.length - 1
+
                         ? currentIndex + 1
+
                         : 0;
 
 
                 showRaster(index);
 
             }
+
         );
 
 
@@ -1529,18 +2002,26 @@
 
         function stopAnimation() {
 
+
             playing = false;
 
 
             if (
+
                 animationTimer !== null
+
             ) {
 
+
                 clearTimeout(
+
                     animationTimer
+
                 );
 
-                animationTimer = null;
+
+                animationTimer =
+                    null;
 
             }
 
@@ -1553,6 +2034,7 @@
 
         async function animationStep() {
 
+
             if (!playing) {
 
                 return;
@@ -1561,9 +2043,12 @@
 
 
             const index =
+
                 currentIndex <
                     forecastFiles.length - 1
+
                     ? currentIndex + 1
+
                     : 0;
 
 
@@ -1578,17 +2063,24 @@
 
 
             animationTimer =
+
                 setTimeout(
+
                     animationStep,
+
                     1200
+
                 );
 
         }
 
 
         playButton.addEventListener(
+
             "click",
+
             () => {
+
 
                 if (playing) {
 
@@ -1603,12 +2095,13 @@
 
 
                 playButton.textContent =
-                    "⏸ Pause";
+                    "⏸ Pausa";
 
 
                 animationStep();
 
             }
+
         );
 
 
@@ -1617,42 +2110,83 @@
         // =========================================================
 
         map.on(
+
             "load",
+
             () => {
+
+
+                /*
+                 * Primer afegim el terreny i el hillshade.
+                 */
+
+                try {
+
+                    addTerrain();
+
+                }
+
+                catch (error) {
+
+                    console.error(
+
+                        "Error carregant el DEM:",
+
+                        error
+
+                    );
+
+                }
+
 
                 updateLegend();
 
+
                 updateTimeLabel();
 
+
                 timeSlider.max =
+
                     String(
+
                         forecastFiles.length - 1
+
                     );
 
 
                 showRaster(0);
 
             }
+
         );
 
 
         // =========================================================
-        // MAPLIBRE ERRORS
+        // ERRORS MAPLIBRE
         // =========================================================
 
         map.on(
+
             "error",
+
             event => {
 
+
                 console.error(
+
                     "MapLibre error:",
+
                     event.error
+
                 );
 
             }
+
         );
 
+
     </script>
+
 
 </body>
 
