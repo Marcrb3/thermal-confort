@@ -943,6 +943,22 @@
 
 
         // =========================================================
+        // POSICIÓ DEL RASTER
+        // =========================================================
+
+        function getFirstSymbolLayerId() {
+
+            const layers = map.getStyle().layers || [];
+
+            const symbolLayer = layers.find(
+                layer => layer.type === "symbol"
+            );
+
+            return symbolLayer ? symbolLayer.id : undefined;
+        }
+
+
+        // =========================================================
         // SHOW RASTER
         // =========================================================
 
@@ -1079,7 +1095,7 @@
 
                         }
 
-                    });
+                    }, getFirstSymbolLayerId());
 
 
                     /*
