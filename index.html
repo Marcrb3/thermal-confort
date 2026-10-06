@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ca">
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Thermal Confort — UTCI</title>
+    <title>Thermal Comfort — UTCI</title>
 
     <style>
         html,
@@ -23,7 +23,7 @@
         }
 
         /* =========================================================
-           PANEL
+           CONTROL PANEL
            ========================================================= */
 
         #panel {
@@ -123,7 +123,7 @@
 
 
         /* =========================================================
-           LLEGENDA
+           LEGEND
            ========================================================= */
 
         #legend {
@@ -202,14 +202,202 @@
         }
 
 
+        /* =========================================================
+           MOBILE
+           ========================================================= */
+
         @media (max-width: 600px) {
 
+            /*
+             * Keep the map as the dominant element.
+             */
+
             #panel {
-                width: 280px;
+                top: 10px;
+                left: 10px;
+
+                width: calc(100vw - 20px);
+                max-width: none;
+
+                box-sizing: border-box;
+
+                padding: 10px 12px;
+
+                border-radius: 8px;
+            }
+
+
+            #panel strong {
+                margin-bottom: 6px;
+
+                font-size: 15px;
+            }
+
+
+            /*
+             * Keep the visualization selector compact.
+             */
+
+            .control {
+                margin-top: 7px;
+            }
+
+            .control label {
+                margin-bottom: 3px;
+
+                font-size: 11px;
+            }
+
+            select {
+                padding: 6px;
+
+                font-size: 13px;
+            }
+
+
+            /*
+             * Compact timeline:
+             * hide the large "Forecast" label and the
+             * textual date below the slider.
+             */
+
+            .timeline-control {
+                margin-top: 8px;
+            }
+
+            .timeline-control>label {
+                display: none;
+            }
+
+            #timeSlider {
+                display: block;
+
+                height: 18px;
+
+                margin: 0;
+            }
+
+            #timeLabel {
+                margin-top: 2px;
+
+                font-size: 11px;
+            }
+
+
+            /*
+             * Keep playback controls compact.
+             */
+
+            .buttons {
+                gap: 5px;
+
+                margin-top: 5px;
+            }
+
+            button {
+                padding: 5px 7px;
+
+                font-size: 12px;
+            }
+
+
+            /*
+             * Status becomes smaller and less dominant.
+             */
+
+            #status {
+                margin-top: 5px;
+
+                font-size: 10px;
+
+                line-height: 1.25;
+            }
+
+
+            /*
+             * Compact legend positioned above the
+             * bottom-right map controls.
+             */
+
+            #legend {
+                right: 10px;
+                bottom: 10px;
+
+                width: 190px;
+
+                box-sizing: border-box;
+
+                padding: 8px 10px;
+
+                border-radius: 7px;
+            }
+
+            #legendTitle {
+                margin-bottom: 4px;
+
+                font-size: 12px;
+            }
+
+            #gradient {
+                height: 12px;
+
+                margin: 5px 0 3px;
+            }
+
+            .legend-labels {
+                font-size: 9px;
+            }
+
+            .stress-item {
+                gap: 5px;
+
+                margin: 2px 0;
+
+                font-size: 9px;
+            }
+
+            .stress-color {
+                width: 14px;
+                height: 10px;
+
+                flex: 0 0 14px;
+            }
+
+        }
+
+
+        /* =========================================================
+           VERY SMALL SCREENS
+           ========================================================= */
+
+        @media (max-width: 380px) {
+
+            #panel {
+                padding: 8px 10px;
+            }
+
+            #panel strong {
+                font-size: 14px;
+            }
+
+            select {
+                font-size: 12px;
+            }
+
+            .buttons button {
+                padding: 4px 5px;
+
+                font-size: 11px;
+            }
+
+            #status {
+                font-size: 9px;
             }
 
             #legend {
-                width: 210px;
+                width: 170px;
+
+                padding: 7px 8px;
             }
 
         }
@@ -224,20 +412,20 @@
 
 
     <!-- =========================================================
-         PANEL
+         CONTROL PANEL
          ========================================================= -->
 
     <div id="panel">
 
         <strong>
-            Thermal Confort
+            Thermal Comfort
         </strong>
 
 
         <div class="control">
 
             <label for="modeSelect">
-                Visualització
+                Visualization
             </label>
 
             <select id="modeSelect">
@@ -247,7 +435,7 @@
                 </option>
 
                 <option value="stress">
-                    Estrès tèrmic
+                    Thermal stress
                 </option>
 
             </select>
@@ -255,10 +443,10 @@
         </div>
 
 
-        <div class="control">
+        <div class="control timeline-control">
 
             <label for="timeSlider">
-                Previsió
+                Forecast
             </label>
 
             <input id="timeSlider" type="range" min="0" max="29" step="1" value="0">
@@ -272,7 +460,7 @@
 
         <div class="buttons">
 
-            <button id="previousButton" type="button">
+            <button id="previousButton" type="button" aria-label="Previous forecast" title="Previous forecast">
                 ◀
             </button>
 
@@ -282,7 +470,7 @@
             </button>
 
 
-            <button id="nextButton" type="button">
+            <button id="nextButton" type="button" aria-label="Next forecast" title="Next forecast">
                 ▶
             </button>
 
@@ -290,14 +478,14 @@
 
 
         <div id="status">
-            Preparant...
+            Preparing...
         </div>
 
     </div>
 
 
     <!-- =========================================================
-         LLEGENDA
+         LEGEND
          ========================================================= -->
 
     <div id="legend">
@@ -329,61 +517,61 @@
             <div class="stress-item">
                 <span class="stress-color" style="background:#313695">
                 </span>
-                &lt; Fred extrem
+                &lt; Extreme cold stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#4575b4">
                 </span>
-                Fred molt fort
+                Very strong cold stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#74add1">
                 </span>
-                Fred fort
+                Strong cold stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#abd9e9">
                 </span>
-                Fred moderat
+                Moderate cold stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#d9f0f3">
                 </span>
-                Fred lleu
+                Slight cold stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#ffffbf">
                 </span>
-                Sense estrès
+                No thermal stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#fee08b">
                 </span>
-                Calor moderada
+                Moderate heat stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#fdae61">
                 </span>
-                Calor forta
+                Strong heat stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#f46d43">
                 </span>
-                Calor molt forta
+                Very strong heat stress
             </div>
 
             <div class="stress-item">
                 <span class="stress-color" style="background:#a50026">
                 </span>
-                Calor extrema
+                Extreme heat stress
             </div>
 
         </div>
@@ -453,7 +641,7 @@
 
 
         // =========================================================
-        // FITXERS
+        // FORECAST FILES
         // =========================================================
 
         const forecastFiles = [
@@ -495,7 +683,7 @@
 
 
         // =========================================================
-        // ESTAT
+        // STATE
         // =========================================================
 
         let currentIndex = 0;
@@ -522,13 +710,13 @@
 
 
         // =========================================================
-        // CANVAS PERSISTENT
+        // PERSISTENT CANVAS
         // =========================================================
 
         /*
-         * Aquest és EL canvas que utilitzarà MapLibre.
+         * This is THE canvas used by MapLibre.
          *
-         * No en crearem un de nou per cada TIF.
+         * A new canvas is not created for every TIF.
          */
 
         const canvas =
@@ -542,7 +730,7 @@
 
 
         // =========================================================
-        // MAPA
+        // MAP
         // =========================================================
 
         const map = new maplibregl.Map({
@@ -564,7 +752,7 @@
 
 
         // =========================================================
-        // PALETA UTCI CONTÍNUA
+        // CONTINUOUS UTCI PALETTE
         // =========================================================
 
         function utciColor(value) {
@@ -648,7 +836,7 @@
 
 
         // =========================================================
-        // PALETA ESTRÈS
+        // THERMAL STRESS PALETTE
         // =========================================================
 
         function stressColor(value) {
@@ -693,7 +881,7 @@
 
 
         // =========================================================
-        // COLOR ACTUAL
+        // CURRENT COLOR
         // =========================================================
 
         function getColor(value) {
@@ -710,7 +898,7 @@
 
 
         // =========================================================
-        // CARREGAR COG
+        // LOAD COG
         // =========================================================
 
         async function loadRaster(filename) {
@@ -720,11 +908,11 @@
 
 
             status.textContent =
-                `Carregant ${formatFilename(filename)}...`;
+                `Loading ${formatFilename(filename)}...`;
 
 
             console.log(
-                "Carregant COG:",
+                "Loading COG:",
                 url
             );
 
@@ -846,7 +1034,7 @@
 
 
         // =========================================================
-        // PINTAR RASTER AL CANVAS
+        // PAINT RASTER TO CANVAS
         // =========================================================
 
         function paintRaster() {
@@ -859,7 +1047,8 @@
 
 
             /*
-             * El canvas manté exactament la mida del raster.
+             * The canvas keeps exactly the same size
+             * as the raster.
              */
 
             if (
@@ -933,8 +1122,8 @@
 
 
             /*
-             * CanvasSource amb animate=true detectarà
-             * el nou contingut del canvas.
+             * CanvasSource with animate=true detects
+             * the new canvas contents.
              */
 
             map.triggerRepaint();
@@ -943,18 +1132,23 @@
 
 
         // =========================================================
-        // POSICIÓ DEL RASTER
+        // RASTER POSITION
         // =========================================================
 
         function getFirstSymbolLayerId() {
 
-            const layers = map.getStyle().layers || [];
+            const layers =
+                map.getStyle().layers || [];
 
-            const symbolLayer = layers.find(
-                layer => layer.type === "symbol"
-            );
+            const symbolLayer =
+                layers.find(
+                    layer => layer.type === "symbol"
+                );
 
-            return symbolLayer ? symbolLayer.id : undefined;
+            return symbolLayer
+                ? symbolLayer.id
+                : undefined;
+
         }
 
 
@@ -996,7 +1190,8 @@
             try {
 
                 /*
-                 * Si és un TIF diferent, el carreguem.
+                 * If this is a different TIF,
+                 * load it.
                  */
 
                 if (
@@ -1008,8 +1203,8 @@
 
 
                     /*
-                     * Si mentrestant l'usuari ha mogut
-                     * el slider, ignorem aquest resultat.
+                     * If the user moved the slider
+                     * while loading, ignore this result.
                      */
 
                     if (
@@ -1043,19 +1238,19 @@
 
 
                 status.textContent =
-                    `Renderitzant ${formatFilename(filename)}...`;
+                    `Rendering ${formatFilename(filename)}...`;
 
 
                 /*
-                 * Pintem el Float32Array al canvas.
+                 * Paint the Float32Array to the canvas.
                  */
 
                 paintRaster();
 
 
                 /*
-                 * Si és la primera vegada, creem
-                 * la CanvasSource.
+                 * If this is the first time,
+                 * create the CanvasSource.
                  */
 
                 if (
@@ -1099,7 +1294,7 @@
 
 
                     /*
-                     * Zoom inicial a Catalunya.
+                     * Initial zoom to Catalonia.
                      */
 
                     map.fitBounds(
@@ -1118,8 +1313,8 @@
                 else {
 
                     /*
-                     * El canvas és el mateix.
-                     * Només actualitzem les coordenades.
+                     * The canvas is the same.
+                     * Only update its coordinates.
                      */
 
                     const source =
@@ -1145,7 +1340,7 @@
             catch (error) {
 
                 console.error(
-                    "Error mostrant raster:",
+                    "Error displaying raster:",
                     error
                 );
 
@@ -1160,7 +1355,7 @@
 
 
         // =========================================================
-        // FORMAT FITXER
+        // FORMAT FILENAME
         // =========================================================
 
         function formatFilename(filename) {
@@ -1189,7 +1384,7 @@
 
 
         // =========================================================
-        // ACTUALITZAR DATA
+        // UPDATE DATE
         // =========================================================
 
         function updateTimeLabel() {
@@ -1203,7 +1398,7 @@
 
 
         // =========================================================
-        // LLEGENDA
+        // LEGEND
         // =========================================================
 
         function updateLegend() {
@@ -1213,7 +1408,7 @@
             ) {
 
                 legendTitle.textContent =
-                    "Estrès tèrmic";
+                    "Thermal stress";
 
                 continuousLegend.style.display =
                     "none";
@@ -1240,7 +1435,7 @@
 
 
         // =========================================================
-        // CANVI DE MODE
+        // MODE CHANGE
         // =========================================================
 
         modeSelect.addEventListener(
@@ -1255,9 +1450,10 @@
 
 
                 /*
-                 * No descarreguem el TIF.
+                 * Do not download the TIF again.
                  *
-                 * Simplement el tornem a pintar.
+                 * Simply repaint it using the
+                 * selected color scale.
                  */
 
                 paintRaster();
@@ -1287,7 +1483,7 @@
 
 
         // =========================================================
-        // ANTERIOR
+        // PREVIOUS
         // =========================================================
 
         previousButton.addEventListener(
@@ -1307,7 +1503,7 @@
 
 
         // =========================================================
-        // SEGÜENT
+        // NEXT
         // =========================================================
 
         nextButton.addEventListener(
@@ -1407,7 +1603,7 @@
 
 
                 playButton.textContent =
-                    "⏸ Pausa";
+                    "⏸ Pause";
 
 
                 animationStep();
@@ -1441,7 +1637,7 @@
 
 
         // =========================================================
-        // ERRORS MAPLIBRE
+        // MAPLIBRE ERRORS
         // =========================================================
 
         map.on(
