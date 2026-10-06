@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ca">
+<html lang="en">
 
 <head>
 
@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Thermal Confort — UTCI</title>
+    <title>Thermal Comfort — UTCI</title>
 
 
     <style>
@@ -185,7 +185,7 @@
 
 
         /* =========================================================
-           LLEGENDA
+           LEGEND
            ========================================================= */
 
         #legend {
@@ -324,14 +324,14 @@
     <div id="panel">
 
         <strong>
-            Thermal Confort
+            Thermal Comfort
         </strong>
 
 
         <div class="control">
 
             <label for="modeSelect">
-                Visualització
+                View
             </label>
 
             <select id="modeSelect">
@@ -341,7 +341,7 @@
                 </option>
 
                 <option value="stress">
-                    Estrès tèrmic
+                    Thermal stress
                 </option>
 
             </select>
@@ -352,7 +352,7 @@
         <div class="control">
 
             <label for="timeSlider">
-                Previsió
+                Forecast
             </label>
 
             <input id="timeSlider" type="range" min="0" max="29" step="1" value="0">
@@ -384,14 +384,14 @@
 
 
         <div id="status">
-            Preparant...
+            Preparing...
         </div>
 
     </div>
 
 
     <!-- =========================================================
-         LLEGENDA
+         LEGEND
          ========================================================= -->
 
     <div id="legend">
@@ -426,7 +426,7 @@
 
                 <span class="stress-color" style="background:#313695"></span>
 
-                Fred extrem
+                Extreme cold
 
             </div>
 
@@ -435,7 +435,7 @@
 
                 <span class="stress-color" style="background:#4575b4"></span>
 
-                Fred molt fort
+                Very strong cold
 
             </div>
 
@@ -444,7 +444,7 @@
 
                 <span class="stress-color" style="background:#74add1"></span>
 
-                Fred fort
+                Strong cold
 
             </div>
 
@@ -453,7 +453,7 @@
 
                 <span class="stress-color" style="background:#abd9e9"></span>
 
-                Fred moderat
+                Moderate cold
 
             </div>
 
@@ -462,7 +462,7 @@
 
                 <span class="stress-color" style="background:#d9f0f3"></span>
 
-                Fred lleu
+                Slight cold
 
             </div>
 
@@ -471,7 +471,7 @@
 
                 <span class="stress-color" style="background:#ffffbf"></span>
 
-                Sense estrès
+                No thermal stress
 
             </div>
 
@@ -480,7 +480,7 @@
 
                 <span class="stress-color" style="background:#fee08b"></span>
 
-                Calor moderada
+                Moderate heat
 
             </div>
 
@@ -489,7 +489,7 @@
 
                 <span class="stress-color" style="background:#fdae61"></span>
 
-                Calor forta
+                Strong heat
 
             </div>
 
@@ -498,7 +498,7 @@
 
                 <span class="stress-color" style="background:#f46d43"></span>
 
-                Calor molt forta
+                Very strong heat
 
             </div>
 
@@ -507,7 +507,7 @@
 
                 <span class="stress-color" style="background:#a50026"></span>
 
-                Calor extrema
+                Extreme heat
 
             </div>
 
@@ -618,7 +618,7 @@
 
 
         // =========================================================
-        // FITXERS
+        // FILES
         // =========================================================
 
         const forecastFiles = [
@@ -664,7 +664,7 @@
 
 
         // =========================================================
-        // ESTAT
+        // STATE
         // =========================================================
 
         let currentIndex = 0;
@@ -691,7 +691,7 @@
 
 
         // =========================================================
-        // CANVAS PERSISTENT
+        // PERSISTENT CANVAS
         // =========================================================
 
         const canvas =
@@ -710,7 +710,7 @@
 
 
         // =========================================================
-        // MAPA
+        // MAP
         // =========================================================
 
         const map =
@@ -745,13 +745,13 @@
         // =========================================================
 
         /*
-         * DEM global de Mapterhorn.
+         * Global DEM from Mapterhorn.
          *
-         * MapLibre utilitza aquest tipus de raster-dem
-         * tant per al terreny 3D com per al hillshade.
+         * MapLibre uses this type of raster-dem
+         * for both 3D terrain and hillshade.
          *
-         * Fem servir dues fonts separades perquè MapLibre
-         * recomana separar els consumidors del DEM.
+         * Two separate sources are used because MapLibre
+         * recommends separating DEM consumers.
          */
 
         const TERRAIN_URL =
@@ -805,9 +805,9 @@
 
 
             /*
-             * Terrain 3D.
+             * 3D terrain.
              *
-             * Exageració 1 = relleu real.
+             * Exaggeration 1 = real terrain.
              */
 
             map.setTerrain({
@@ -823,8 +823,8 @@
             /*
              * Hillshade.
              *
-             * Es col·locarà sota el raster UTCI
-             * però per sobre del basemap.
+             * It is placed below the UTCI raster
+             * but above the basemap.
              */
 
             map.addLayer(
@@ -872,24 +872,23 @@
 
 
         // =========================================================
-        // TROBAR PRIMERA CAPA DE TEXT
+        // FIND FIRST TEXT LAYER
         // =========================================================
 
         /*
-         * Les capes d'un style MapLibre estan ordenades
-         * de baix a dalt.
+         * MapLibre style layers are ordered from bottom to top.
          *
-         * La primera capa de text és, per tant,
-         * la capa de text més baixa del mapa.
+         * Therefore, the first text layer is the lowest
+         * text layer in the map.
          *
-         * Inserint-hi el UTCI just abans:
+         * Inserting UTCI immediately before it gives:
          *
          *      basemap
          *      hillshade
          *      UTCI
-         *      text / etiquetes
+         *      text / labels
          *
-         * Això evita que les etiquetes quedin tapades.
+         * This prevents labels from being covered.
          */
 
         function getFirstTextLayerId() {
@@ -922,7 +921,7 @@
 
 
         // =========================================================
-        // PALETA UTCI CONTÍNUA
+        // CONTINUOUS UTCI PALETTE
         // =========================================================
 
         function utciColor(value) {
@@ -1079,7 +1078,7 @@
 
 
         // =========================================================
-        // PALETA ESTRÈS
+        // THERMAL STRESS PALETTE
         // =========================================================
 
         function stressColor(value) {
@@ -1200,7 +1199,7 @@
 
 
         // =========================================================
-        // COLOR ACTUAL
+        // CURRENT COLOR
         // =========================================================
 
         function getColor(value) {
@@ -1221,7 +1220,7 @@
 
 
         // =========================================================
-        // CARREGAR COG
+        // LOAD COG
         // =========================================================
 
         async function loadRaster(filename) {
@@ -1233,13 +1232,13 @@
 
             status.textContent =
 
-                `Carregant ` +
+                `Loading ` +
                 `${formatFilename(filename)}...`;
 
 
             console.log(
 
-                "Carregant COG:",
+                "Loading COG:",
 
                 url
 
@@ -1421,7 +1420,7 @@
 
 
         // =========================================================
-        // PINTAR RASTER AL CANVAS
+        // PAINT RASTER TO CANVAS
         // =========================================================
 
         function paintRaster() {
@@ -1631,7 +1630,7 @@
 
                 status.textContent =
 
-                    `Renderitzant ` +
+                    `Rendering ` +
                     `${formatFilename(filename)}...`;
 
 
@@ -1639,7 +1638,7 @@
 
 
                 // =================================================
-                // CREAR CANVAS SOURCE
+                // CREATE CANVAS SOURCE
                 // =================================================
 
                 if (
@@ -1675,8 +1674,8 @@
                     /*
                      * Important:
                      *
-                     * El UTCI s'insereix just abans de la
-                     * primera capa de text del mapa.
+                     * UTCI is inserted immediately before
+                     * the first text layer of the map.
                      */
 
                     map.addLayer(
@@ -1766,7 +1765,7 @@
 
                 console.error(
 
-                    "Error mostrant raster:",
+                    "Error displaying raster:",
 
                     error
 
@@ -1784,7 +1783,7 @@
 
 
         // =========================================================
-        // FORMAT FITXER
+        // FORMAT FILENAME
         // =========================================================
 
         function formatFilename(filename) {
@@ -1817,7 +1816,7 @@
 
 
         // =========================================================
-        // ACTUALITZAR DATA
+        // UPDATE DATE
         // =========================================================
 
         function updateTimeLabel() {
@@ -1837,7 +1836,7 @@
 
 
         // =========================================================
-        // LLEGENDA
+        // LEGEND
         // =========================================================
 
         function updateLegend() {
@@ -1852,7 +1851,7 @@
 
                 legendTitle.textContent =
 
-                    "Estrès tèrmic";
+                    "Thermal stress";
 
 
                 continuousLegend.style.display =
@@ -1890,7 +1889,7 @@
 
 
         // =========================================================
-        // CANVI DE MODE
+        // MODE CHANGE
         // =========================================================
 
         modeSelect.addEventListener(
@@ -1942,7 +1941,7 @@
 
 
         // =========================================================
-        // ANTERIOR
+        // PREVIOUS
         // =========================================================
 
         previousButton.addEventListener(
@@ -1969,7 +1968,7 @@
 
 
         // =========================================================
-        // SEGÜENT
+        // NEXT
         // =========================================================
 
         nextButton.addEventListener(
@@ -2095,7 +2094,7 @@
 
 
                 playButton.textContent =
-                    "⏸ Pausa";
+                    "⏸ Pause";
 
 
                 animationStep();
@@ -2117,7 +2116,7 @@
 
 
                 /*
-                 * Primer afegim el terreny i el hillshade.
+                 * First add terrain and hillshade.
                  */
 
                 try {
@@ -2130,7 +2129,7 @@
 
                     console.error(
 
-                        "Error carregant el DEM:",
+                        "Error loading DEM:",
 
                         error
 
@@ -2162,7 +2161,7 @@
 
 
         // =========================================================
-        // ERRORS MAPLIBRE
+        // MAPLIBRE ERRORS
         // =========================================================
 
         map.on(
