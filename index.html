@@ -618,49 +618,13 @@
 
 
         // =========================================================
-        // FILES
+        // FORECAST MANIFEST
         // =========================================================
 
-        const forecastFiles = [
+        const FORECAST_MANIFEST =
+            "./forecast.json";
 
-
-            "utci_2026-10-05T09-00-00.000000000.tif",
-            "utci_2026-10-05T12-00-00.000000000.tif",
-            "utci_2026-10-05T15-00-00.000000000.tif",
-            "utci_2026-10-05T18-00-00.000000000.tif",
-            "utci_2026-10-05T21-00-00.000000000.tif",
-
-
-            "utci_2026-10-06T00-00-00.000000000.tif",
-            "utci_2026-10-06T03-00-00.000000000.tif",
-            "utci_2026-10-06T06-00-00.000000000.tif",
-            "utci_2026-10-06T09-00-00.000000000.tif",
-            "utci_2026-10-06T12-00-00.000000000.tif",
-            "utci_2026-10-06T15-00-00.000000000.tif",
-            "utci_2026-10-06T18-00-00.000000000.tif",
-            "utci_2026-10-06T21-00-00.000000000.tif",
-
-
-            "utci_2026-10-07T00-00-00.000000000.tif",
-            "utci_2026-10-07T03-00-00.000000000.tif",
-            "utci_2026-10-07T06-00-00.000000000.tif",
-            "utci_2026-10-07T09-00-00.000000000.tif",
-            "utci_2026-10-07T12-00-00.000000000.tif",
-            "utci_2026-10-07T15-00-00.000000000.tif",
-            "utci_2026-10-07T18-00-00.000000000.tif",
-            "utci_2026-10-07T21-00-00.000000000.tif",
-
-
-            "utci_2026-10-08T00-00-00.000000000.tif",
-            "utci_2026-10-08T03-00-00.000000000.tif",
-            "utci_2026-10-08T06-00-00.000000000.tif",
-            "utci_2026-10-08T09-00-00.000000000.tif",
-            "utci_2026-10-08T12-00-00.000000000.tif",
-            "utci_2026-10-08T15-00-00.000000000.tif",
-            "utci_2026-10-08T18-00-00.000000000.tif",
-            "utci_2026-10-08T21-00-00.000000000.tif"
-
-        ];
+        let forecastFiles = [];
 
 
         // =========================================================
@@ -902,7 +866,7 @@
 
                     layer =>
 
-                        layer.type === "symbol" &&
+
 
                         layer.layout &&
 
@@ -1215,6 +1179,92 @@
 
 
             return utciColor(value);
+
+        }
+
+
+        // =========================================================
+        // LOAD FORECAST MANIFEST
+        // =========================================================
+
+        async function loadForecastManifest() {
+
+            status.textContent =
+                "Loading forecast...";
+
+            const response =
+                await fetch(
+                    `${FORECAST_MANIFEST}?t=${Date.now()}`,
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Unable to load ${FORECAST_MANIFEST} ` +
+                    `(${response.status})`
+                );
+
+            }
+
+            const manifest =
+                await response.json();
+
+            if (
+                !manifest ||
+                !Array.isArray(manifest.files) ||
+                manifest.files.length === 0
+            ) {
+
+                throw new Error(
+                    "forecast.json does not contain any forecast files."
+                );
+
+            }
+
+            forecastFiles =
+                manifest.files.map(
+                    entry => {
+
+                        if (
+                            typeof entry === "string"
+                        ) {
+
+                            return entry;
+
+                        }
+
+                        if (
+                            entry &&
+                            typeof entry.filename === "string"
+                        ) {
+
+                            return entry.filename;
+
+                        }
+
+                        throw new Error(
+                            "Invalid entry in forecast.json."
+                        );
+
+                    }
+                );
+
+            console.log(
+                "Forecast manifest:",
+                {
+                    generatedAt:
+                        manifest.generated_at,
+
+                    count:
+                        forecastFiles.length,
+
+                    files:
+                        forecastFiles
+                }
+            );
 
         }
 
@@ -1695,7 +1745,7 @@
                             {
 
                                 "raster-opacity":
-                                    0.95,
+                                    0.9,
 
                                 "raster-fade-duration":
                                     0
@@ -2112,7 +2162,7 @@
 
             "load",
 
-            () => {
+            async () => {
 
 
                 /*
@@ -2141,19 +2191,38 @@
                 updateLegend();
 
 
-                updateTimeLabel();
+                try {
+
+                    await loadForecastManifest();
+
+                    updateTimeLabel();
 
 
-                timeSlider.max =
+                    timeSlider.max =
 
-                    String(
+                        String(
 
-                        forecastFiles.length - 1
+                            forecastFiles.length - 1
 
+                        );
+
+
+                    await showRaster(0);
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "Error loading forecast manifest:",
+                        error
                     );
 
+                    status.textContent =
+                        "Error loading forecast: " +
+                        error.message;
 
-                showRaster(0);
+                }
 
             }
 
